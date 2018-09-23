@@ -1,0 +1,79 @@
+{{template "header"}}
+
+<body class = "category-body">
+
+{{template "svg"}}
+
+{{template "nav"}}
+
+{{template "logo"}}
+{{template "modal"}}
+<main class = "posts-main">
+
+{{if .}}
+{{range .}}
+<div class="post-snippet">
+  <img class = "post-photo" src="{{index .Images 0}}" alt="">
+  <header class = "post-header category-margin">
+    <h3 class = "topic-category">{{.Category}}</h3>
+    <a href="/posts/show/{{.IDstr}}"><h2>{{.Name}}</h2></a>
+    <hr class = "post-header-line margin-zero">
+  </header>
+  <div class = "content category-margin">
+  {{index .Content 0 | truncate}}...
+  </div>
+  <h3 class = "date category-date">{{.Date}}</h3>
+</div>
+{{end}}
+
+{{else}}
+
+<p class="no-posts">На данный момент посты в этой категории отсутствуют.</p>
+
+{{end}}
+
+</main>
+
+<aside>
+
+  <section class = "about-me">
+  <img src="/static/img/myphoto.png" alt="">
+  <div class = "content">Всем привет! Меня зовут Мария Ефименко.
+    Я выпускница механико-математического факультета МГУ, бизнес-аналитик в IT консалтинговой компании, жена и мама двоих детей.
+  </div>
+    <a href="/about"><button class = "read-more">Читать далее</button></a>
+    <hr class = "read-more-line">
+    </section>
+
+    <div class="sign-up-box">
+      <h2>Подписка</h2>
+      <hr class = "read-more-line">
+      <h3>Получайте уведомления о новых постах прямо на Вашу почту!</h3>
+    <form  class = "sing-up-form" action="/" method="post">
+      <input type="email" name="email" class = "email" placeholder="Email">
+      <input type="submit" name="" value="Подписаться">
+    </form>
+    </div>
+
+    <div class="popular-posts-box">
+      <h2>Популярные посты</h2>
+      <hr class = "read-more-line">
+
+      {{range .}}
+
+      {{if eq 1 .IsPopular}}
+
+        <div class="post-short-info">
+          <img class = "post-photo" src="{{index .Images 0}}" alt="">
+          <a href="/posts/show/{{.IDstr}}"><h2>{{.Name}}</h2></a>
+        </div>
+        {{end}}
+
+    {{end}}
+
+
+</aside>
+<script type="text/javascript" src="/static/js/modalFunctionality.js"></script>
+<script type="text/javascript" src="/static/js/subscribe.js"></script>
+
+{{template "footer"}}

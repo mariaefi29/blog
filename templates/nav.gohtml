@@ -1,0 +1,18 @@
+{{define "nav"}}
+
+<nav>
+  <label class = "icon" for="show-menu">
+    <svg id = "bars" ><use xlink:href="#bars"></use></svg>Меню</label>
+  <input type="checkbox" id="show-menu">
+  <ul id = "sidebar">
+    <li><a href="/"><svg id = "home"><use xlink:href="#home"></use></svg></a></li>
+    <li><a href="/about">О&nbsp;себе</a></li>
+    <li><a href="/category/family">Семья</a></li>
+    <li><a href="/category/travel">Путешествия</a></li>
+    <li class = "five"><a href="/category/english">Английский язык</a></li>
+    <li><a href="/category/webdev">Веб разработка</a></li>
+    <li><a href="/contact">Контакты</a></li>
+  </ul>
+</nav>
+
+{{end}}

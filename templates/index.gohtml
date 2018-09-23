@@ -1,0 +1,133 @@
+{{template "header"}}
+
+<body>
+
+{{template "svg"}}
+
+{{template "nav"}}
+
+<!-- <main> -->
+{{template "logo"}}
+{{template "modal"}}
+  <section class = "posts">
+
+{{range .}}
+
+     <article class = "post">
+      <header class = "post-header">
+        <a href="/category/{{.CategoryEng}}"><h3 class = "topic-category">{{.Category}}</h3></a>
+        <a href="/posts/show/{{.IDstr}}"><h2>{{.Name}}</h2></a>
+        <hr class = "post-header-line">
+        <h3 class = "date">{{.Date}}</h3>
+      </header>
+      <img class = "post-photo" src="{{index .Images 0}}" alt="">
+      <div class = "content">
+      {{index .Content 0 | truncate}}...
+      </div>
+      <a href="/posts/show/{{.IDstr}}"><button class = "read-more">Читать далее</button></a>
+      <hr class = "read-more-line">
+      <div class = "post-end">
+        <a href="/about"><h4>By {{.Author}}</h4></a>
+        <div class="likes">
+          <button class = "like-button" type="submit" name="button" data-post-id = "{{.IDstr}}">
+            <svg id = "heart"><use xlink:href="#heart"></use></svg>
+          </button>
+          <span class = "likes-number" data-post-id = "{{.IDstr}}">{{.Likes}}</span>
+          </div>
+        <a href="/posts/show/{{.IDstr}}#comments"><h4>{{incline .CommentCnt}}</h4></a>
+      </div>
+    </article>
+
+{{end}}
+<div class="load-more">
+  <button type="button" id = "load-more-btn">Показать ещё...</button>
+</div>
+
+  </section>
+<!-- </main> -->
+<aside>
+
+  <section class = "about-me">
+  <img src="/static/img/myphoto.png" alt="">
+  <div class = "content">Всем привет! Меня зовут Мария Ефименко.
+      Я выпускница механико-математического факультета МГУ, бизнес-аналитик в IT консалтинговой компании, жена и мама двоих детей.
+  </div>
+    <a href="/about"><button class = "read-more">Читать далее</button></a>
+    <hr class = "read-more-line">
+    </section>
+
+    <div class="sign-up-box">
+      <h2>Подписка</h2>
+      <hr class = "read-more-line">
+      <h3>Получайте уведомления о новых постах прямо на Вашу почту!</h3>
+    <form  class = "sing-up-form" action="/subscribe" method="post">
+      <input type="email" name="email" class = "email" placeholder="Email" required>
+      <input type="submit" name="" value="Подписаться">
+    </form>
+    </div>
+
+
+
+
+    <div class="popular-posts-box">
+      <h2>Популярные посты</h2>
+      <hr class = "read-more-line">
+
+      {{range .}}
+
+      {{if eq 1 .IsPopular}}
+
+        <div class="post-short-info">
+          <img class = "post-photo" src="{{index .Images 0}}" alt="">
+          <a href="/posts/show/{{.IDstr}}"><h2>{{.Name}}</h2></a>
+        </div>
+        {{end}}
+
+    {{end}}
+
+</aside>
+
+
+</section>
+<script type="text/javascript" src="/static/js/modalFunctionality.js"></script>
+<script>
+  var likeButton = document.querySelectorAll(".like-button");
+  var likesNum = document.querySelectorAll(".likes-number");
+  var modalText = document.querySelector("#modal-text")
+  var modal = document.getElementById('myModal');
+  console.log(likeButton.length);
+  for (var i=0; i<likeButton.length; i++) {
+    console.log(likeButton[i]);
+      likeButton[i].onclick = function(e) {
+        var postId = this.getAttribute("data-post-id");
+        var likeNum = this.nextElementSibling;
+        console.log(this);
+        console.log(likeNum);
+        console.log(postId);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/posts/show/'+postId, true);
+        xhr.addEventListener('readystatechange', function() {
+            if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
+              var data = JSON.parse(xhr.responseText);
+              console.log(data);
+              // modal.style.display = "block";
+              modal.style.visibility = "visible";
+              console.log(modal);
+              modal.style.opacity = "1";
+              // modalContent.style.visibility = "visible"
+              // modalContent.style.opacity = "1"
+              likeNum.textContent = data.likes;
+              console.log(likeNum.textContent);
+              modalText.textContent = data.message;
+              console.log(modalText);
+            }
+        });
+        e.preventDefault();
+        xhr.send();
+  }};
+
+</script>
+<script type="text/javascript" src="/static/js/subscribe.js"></script>
+<script type="text/javascript" src="/static/js/load-more-button.js"></script>
+
+{{template "footer"}}

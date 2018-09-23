@@ -1,0 +1,698 @@
+html {
+  font-family: 'Lora', serif;
+  color: #333;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  line-height: 130%;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+nav {
+  width: 100%;
+  height: fit-content;
+  padding: 0.5rem;
+  height: fit-content;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  position: sticky;
+  top:0;
+  font-size: 1.2rem;
+  background-color: #fbf9f4;
+  color: #333;
+  border-bottom: 1.2px solid #d03b39;
+}
+
+#sidebar {
+  width: 100%;
+  position: fixed;
+  left: -50rem;
+  top: 3.35rem;
+  padding: 1rem;
+  /*layout*/
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-column-gap: 1rem;
+  grid-row-gap: 1rem;
+  background-color: #fbf9f4;
+  transition-property: all;
+  transition-timing-function: ease-in-out;
+  transition-duration: 1s;
+}
+
+li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+a, .icon {
+  transition: color 0.3s ease;
+}
+
+a:hover, .icon:hover {
+  color: #d03b39;
+  fill: #d03b39;
+  cursor: pointer;
+}
+
+.icon {
+  width: 5.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#bars {
+  width: 1.6rem;
+}
+
+svg {
+  fill: currentColor;
+}
+
+input[type="checkbox"] {
+    /* toggle */
+    display: none;
+}
+
+input[type="checkbox"]:checked + #sidebar {
+    /* toggle */
+    left: 0;
+}
+
+.logo {
+  align-self: center;
+  justify-self: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  font-family: 'Marck Script', cursive;
+}
+
+.logo > h1 {
+    font-size: 4rem;
+}
+
+.logo > h2 {
+  font-size: 2rem;
+}
+
+.logo-line {
+  width: 20%;
+  margin: 1rem auto;
+  border-color: #d03b39;
+}
+
+.post-photo {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.post {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  margin-bottom: 3.7rem;
+  transition: left 5s ease-in;
+}
+
+.post-header h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 0.7rem;
+}
+
+.topic-category {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 0.4rem;
+  transition: color 0.3s ease;
+  font-family: 'Marck Script', cursive;
+}
+
+.topic-category:hover {
+  color: #d03b39;
+  cursor: pointer;
+}
+
+.date {
+  text-align: center;
+  font-size: 1.2rem;
+  font-family: 'Marck Script', cursive;
+}
+
+
+.category-date {
+  text-align: left;
+}
+
+.post-header, .about-me {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.post-header {
+  margin-bottom: 1.5rem;
+}
+
+.post-header-line {
+  /*width: 10%;*/
+  width: 48px;
+  margin-bottom: 1rem;
+  border-color: #d03b39;
+}
+
+.content {
+  width: 100%;
+  /* display: flex; */
+  /* flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: center; */
+  text-align: left;
+  font-size: 1rem;
+  line-height: 130%;
+  /*margin-bottom: 1.8rem;*/
+  margin-bottom: 1rem;
+}
+
+.ul-content > li, .ol-content > li {
+  display: list-item;
+  text-align: left;
+  margin: 0.4rem 0rem;
+  line-height: 130%
+}
+
+.ul-content, .ol-content {
+  list-style-position: inside;
+}
+
+.ul-content {
+  list-style-type: disc;
+}
+
+.ol-content {
+  list-style-type: decimal;
+}
+
+.read-more {
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+  font-family: 'Marck Script', cursive;
+  /*margin-top: 1.8rem;*/
+}
+
+.read-more:hover {
+  color: #d03b39;
+}
+
+.read-more-line {
+  margin: 0.5rem 0rem;
+  width: 2.5rem;
+  border-color: #d03b39;
+}
+
+.post-end {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2.3rem;
+  padding: 1rem 0;
+  width: 100%;
+  height: 8rem;
+  border-top: 1.2px solid #d03b39;
+  border-bottom: 1.2px solid #d03b39;
+  font-size: 1.2rem;
+  font-style: italic;
+  font-family: 'Marck Script', cursive;
+}
+
+.category-margin {
+  margin-bottom: 1rem;
+}
+
+#heart {
+  /*width: 38.75px;
+  height: 38.75px;
+  display: block;*/
+  fill: #d03b39;
+  transition: all 0.3s ease-in-out;
+}
+
+#heart:hover {
+  width: 2.5rem;
+  height: 2.5rem;
+  cursor: pointer;
+}
+
+.about-me {
+  background-color: #f6f2e8;
+  /*border: 15px solid #f6f2e8;*/
+  border-radius: 5px;
+  /*padding: 0.6rem 0.4rem 0.6rem 0.6rem;*/
+  padding: 1.5rem;
+  /*margin-bottom: 2rem;*/
+}
+
+
+aside img {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+aside .content {
+  width: 100%;
+  margin-bottom: 1rem;
+  /*text-align: center;*/
+}
+
+footer {
+  padding: 1rem;
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1.2px solid #d03b39;
+  background-color: #fbf9f4;
+  /*height: fit-content;*/
+}
+
+footer > a {
+  margin: 0 0.2rem;
+}
+
+
+.abt-img {
+  width: 100%;
+  border: 15px solid #f6f2e8;
+  border-radius: 5px;
+  margin-bottom: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+
+/* .abt-content, .abt-content-1  {
+  margin-top: 0.5rem;
+} */
+
+.empty-body {
+  height: 100vh;
+  grid-template-rows: 1fr 10fr 1fr;
+}
+
+.no-posts {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 1.3rem;
+}
+
+.sign-up-box, .sign-up-form, .popular-posts-box, .post-short-info {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.sign-up-box, .popular-posts-box {
+  border: 10px solid #f6f2e8;
+  padding: 1rem;
+  margin-top: 2rem;
+
+}
+
+aside h2 {
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+aside h3 {
+  font-style: italic;
+  text-align: center;
+}
+
+/*.post-snippet {
+  margin-bottom:
+}*/
+
+form label {
+
+  display: inline-block;
+  font-style: italic;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+
+input[type=email], input[type=submit], input[type=text], #load-more-btn{
+  height: 2rem;
+}
+
+.sing-up-form > input[type=email] {
+  text-align: center;
+}
+
+input[type=email], input[type=submit], input[type=text], textarea, #load-more-btn {
+  width: 100%;
+  margin-top: 1rem;
+  background-color: #f6f2e8;
+  color: inherit;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+input[type=submit] {
+  font-size: 1rem;
+}
+
+
+input[type=email]:focus, input[type=text]:focus, textarea:focus {
+  border: 1px solid #e48d8b;
+
+}
+
+input[type=submit], #load-more-btn {
+  cursor: pointer;
+  transition-property: all;
+  transition-timing-function: ease;
+  transition-duration: 0.3s;
+}
+
+input[type=submit]:hover, #load-more-btn:hover {
+  background-color: #e48d8b;
+}
+
+.load-more {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+#load-more-btn {
+width: 40%;
+}
+
+.contact-form {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.contact-form > input[type=submit], .comment-form > input[type=submit] {
+  /*width: fit-content;*/
+  width: 9rem;
+  height: 100%;
+  margin-top: 0.5rem;
+  padding: 0.8rem;
+}
+
+.contact-form > input[type=email],  .contact-form > input[type=text], .contact-form > textarea {
+  margin-top: 0.5rem;
+}
+
+.comment-form > label {
+  width: 5rem;
+}
+
+.comment-form > input {
+  width: 16rem;
+  margin-bottom: 1rem;
+  padding: 8px 10px;
+}
+
+.comments > h2 {
+  font-size: 1.1rem;
+  font-style: italic;
+  margin: 1rem 0.5rem 0rem 0rem;
+  /*font-family: 'Marck Script', cursive;
+  font-size: 1.5rem;*/
+}
+
+.post-short-info {
+  margin-top: 1rem;
+}
+
+.margin-zero {
+  margin: 0;
+}
+/*
+input:valid {
+  border: 1px solid red;
+}
+
+input:invalid {
+  border: 1px solid red;
+}*/
+/*
+.comment-list {
+  background-color: #fbf9f4;
+}*/
+
+.comment-header {
+  /*border-bottom: 1px solid #d6d6d6;*/
+  /*border-bottom: 1px solid #e48d8b;*/
+  /*border-bottom: 1.2px solid #d03b39;*/
+  font-family: 'Marck Script', cursive;
+  font-size: 1.5rem;
+  /*font-size: 1.2rem;*/
+  margin-bottom: 2.5rem;
+  padding: 0  1rem;
+  text-align: center;
+}
+
+.comment {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  /*border: 0.5px solid #d03b39;*/
+  border-radius: 20px;
+  margin-bottom: 2rem;
+  /*padding: 0 1rem 2rem 1rem;*/
+  padding: 1.5rem;
+  /*background-color: #fbf9f4;*/
+  background-color: #f6f2e8;
+
+  width: 80%;
+}
+
+.comment:nth-of-type(even) {
+    margin-left: 20%;
+}
+
+.comment > p {
+  text-align: left;
+  line-height: 150%;
+  word-wrap: break-word;
+  padding: 1rem;
+}
+
+.comment > div, .comment > a, .comment > h2 {
+  line-height: 150%;
+}
+
+.comment-author {
+  width: 100%;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.comment-author > h2 {
+  text-transform: uppercase;
+  /*margin-bottom: 0.5rem;*/
+  /*color: #d03b39;*/
+}
+
+.comment-date {
+  color: #d7c390;
+  font-size: 1.1rem;
+  /*margin-bottom: 0.5rem;*/
+  align-self: flex-end;
+}
+
+.website {
+  cursor: pointer;
+  color: #d03b39;
+  font-style: italic;
+  font-size: 0.9rem;
+  /*margin-bottom: 0.5rem;*/
+}
+
+.success-flash {
+  color: green;
+}
+
+.likes {
+  height: 100%;
+  width: 10%;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-around;
+  align-items: center;
+}
+
+/*.likes-number {
+  align-self: flex-end;
+}*/
+/* The Modal (background) */
+.modal {
+    /*display: none;*/
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /*height: 100%;*/
+    height: 100vh;
+    /*grid-row: -1/1;
+    grid-column: -1/-1;*/
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 1s, opacity 0.5s ease-in;
+}
+
+/* Modal Content/Box */
+.modal-content {
+    display: grid;
+    grid-template-columns: 1fr 7fr 1fr;
+    grid-template-rows: 1fr 3fr 1fr;
+    background-color: #fbf9f4;
+    margin: 1rem;
+    padding: 0.5rem 1rem;
+    /*border: 1px solid #d03b39;*/
+    border-radius: 5px;
+    width: 28rem; /* Could be more or less, depending on screen size */
+    height: 18rem;
+    text-align: center;
+    /*visibility: hidden;
+    opacity: 0;
+    transition: visibility 1s, opacity 0.5s linear;*/
+
+}
+
+#modal-text {
+  align-self: center;
+  font-size: 1.4rem;
+  grid-row: 2/2;
+  grid-column: 2/2;
+  /*color: #d03b39;*/
+  color: #333;
+  /*margin: auto 0;*/
+
+}
+
+#check {
+  grid-row: 2/2;
+  grid-column: 2/2;
+  justify-self: center;
+  align-self: end;
+  font-size: 1.5rem;
+  fill: currentColor;
+  transition-property: fill;
+  transition-timing-function: ease;
+  transition-duration: 0.3s;
+  pointer-events:all;
+}
+
+#check:hover,
+#check:focus{
+  fill: red;
+  cursor: pointer;
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    grid-row: 1/1;
+    grid-column: 3/3;
+    /*align-self: flex-end;*/
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    justify-self: end;
+    align-self: start;
+    transition-property: color;
+    transition-timing-function: ease;
+    transition-duration: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+    color: #d03b39;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.profile-pages {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-pages > a {
+  margin: 0 0.5rem;
+  /*width: 1.5rem;
+  height: 1.5rem*/
+}
+
+.profile-pages > a > svg {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+.post-sequence {
+  width: 100%;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  /*font-size: 0.5rem;*/
+  font-family: 'Marck Script', cursive;
+}
+
+.post-sequence > a {
+  /*width: 10%;*/
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-around;
+  align-items: center;
+}
+
+#rightarrow, #leftarrow {
+  font-size: 0.5rem;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+}
+
+.abt-content a,  .abt-content-1 a, .content a{
+  color: #d03b39;
+}

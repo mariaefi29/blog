@@ -1,0 +1,67 @@
+{{template "header"}}
+
+<body>
+
+{{template "svg"}}
+
+{{template "nav"}}
+
+{{template "logo"}}
+{{template "modal"}}
+<header class = "post-header abt-post-header">
+  <h1>Контакты</h1>
+  <hr class = "post-header-line">
+</header>
+
+<main class = "about-main">
+
+  <form class="contact-form" action="/contact" method="post">
+    <label for="name">Имя*</label>
+    <input class = "name" type="text" name="name" required>
+
+    <label for="email">Email*</label>
+    <input type="email" name="email" class = "email" required>
+
+    <label for="message">Сообщение*</label>
+    <textarea name="message" rows="12" class = "message"></textarea>
+
+    <input class = "send-button" type="submit" name="" value="Отправить" required>
+
+  </form>
+
+<div class="content abt-content">
+  <p>Я всегда рада буду получить от вас любую обратную связь посредством этой контактной формы!</p>
+
+  <p>Если вы хотите получить более подробную информацию по постам, совет или рекомендацию, ищите сотрудничества, пишите, не стесняйтесь :)</p>
+
+  <p>Также вы можете написать мне в одной из социальных сетей, указанных на странице <a href="/about">О себе</a>, а по личным вопросам пишите на почту: <a href="mailto:maria.efimenko29@gmail.com">maria.efimenko29@gmail.com</a></p>
+</div>
+</main>
+
+<script>
+var form = document.querySelector(".contact-form");
+console.log(form);
+form.addEventListener('submit', function(e){
+  var name = document.querySelector(".name");
+  var message = document.querySelector(".message");
+  var email = document.querySelector(".email");
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/contact', true);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.addEventListener('readystatechange', function() {
+      if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
+          form.reset();
+          // modal.style.display = "block";
+          modal.style.visibility = "visible";
+          modal.style.opacity = "1";
+          modalText.textContent = xhr.responseText;
+      }
+  });
+  e.preventDefault();
+  xhr.send("name="+name.value+"&email="+email.value+"&message="+message.value);
+})
+
+</script>
+
+<script type="text/javascript" src="/static/js/modalFunctionality.js"></script>
+{{template "footer"}}

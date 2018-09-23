@@ -1,0 +1,203 @@
+{{template "header"}}
+
+<body>
+
+{{template "svg"}}
+
+{{template "nav"}}
+
+<!-- <main> -->
+{{template "logo"}}
+{{template "modal"}}
+  <section class = "posts">
+
+
+     <article class = "post">
+      <header class = "post-header">
+        <a href="/category/{{.CategoryEng}}"><h3 class = "topic-category">{{.Category}}</h3></a>
+        <a href="/posts/show/{{.IDstr}}"><h2>{{.Name}}</h2></a>
+        <hr class = "post-header-line">
+        <h3 class = "date">{{.Date}}</h3>
+      </header>
+      {{range $i, $e := .Images}}
+      {{if ne $e "skip"}}
+      <img class = "post-photo" src="{{$e}}" alt="">
+      {{end}}
+      <div class = "content">
+      {{index $.Content $i}}
+      </div>
+      {{end}}
+      <div class = "post-end">
+        <a href="/about"><h4>By {{.Author}}</h4></a>
+        <div class="likes">
+          <!-- <form action="/posts/show/{{.IDstr}}" method="post">
+            <button type="submit" name="button">
+              <svg id = "heart"><use xlink:href="#heart"></use></svg>
+            </button>
+          </form> -->
+          <button class = "like-button" type="submit" name="button">
+            <svg id = "heart"><use xlink:href="#heart"></use></svg>
+          </button>
+          <span class = "likes-number">{{.Likes}}</span>
+          </div>
+        <!-- <svg id = "heart"><use xlink:href="#heart"></use></svg> -->
+        <a href="#comments"><h4>{{incline .CommentCnt}}</h4></a>
+      </div>
+
+      <div class="post-sequence">
+        {{if ne .PrevPostIDstr ""}}
+        <a href="/posts/show/{{.PrevPostIDstr}}"><svg id = "leftarrow"><use xlink:href="#leftarrow"></use></svg></a>
+        {{else}}
+        <div class="empty">
+        </div>
+        {{end}}
+        {{if ne .NextPostIDstr ""}}
+        <a href="/posts/show/{{.NextPostIDstr}}"><svg id = "rightarrow"><use xlink:href="#rightarrow"></use></svg></a>
+        {{end}}
+      </div>
+
+    </article>
+
+    <section class = "comments" id = "comments">
+
+      {{if ne .CommentCnt 0}}
+
+      <!-- <header class = "comment-header">{{incline .CommentCnt}}</header> -->
+      <header class = "comment-header">Комментарии</header>
+
+      {{end}}
+      <ol class = "comment-list">
+      {{range .Comments}}
+      {{if eq .ApprovedFlg 1}}
+
+        <li class = "comment">
+          <div class = "comment-author">
+            <h2>{{.Author}}</h2>
+            <a href="{{.Website}}" class = "website">{{.Website}}</a>
+          </div>
+          <p>{{.Content}}</p>
+          <div class = "date comment-date">{{.CreatedAt}}</div>
+        </li>
+
+      {{end}}
+      {{end}}
+      </ol>
+      <p class="form-field-flash" id="flash"></p>
+      <h2>Оставить комментарий:</h2>
+      <form class="comment-form" action="/posts/show/{{.IDstr}}/comments" method="POST">
+      <!-- <form class="comment-form" method="POST"> -->
+      <textarea class = "message" name="message" rows="8"></textarea>
+
+
+        <label for="username">Имя*</label>
+        <input class = "username" type="text" name="username" required><br>
+
+        <label for="email">Email*</label>
+        <input type="email" name="email" class = "email-field" required><br>
+
+        <label for="website">Веб сайт</label>
+        <input type="text" name="website" class = "website-input"><br>
+
+        <input class = "send-button" type="submit" name="" value="Отправить" required>
+
+      </form>
+
+    </section>
+
+
+
+  </section>
+
+
+
+<!-- </main> -->
+<aside>
+
+  <section class = "about-me">
+  <img src="/static/img/myphoto.png" alt="">
+  <div class = "content">Всем привет! Меня зовут Мария Ефименко.
+    Я выпускница механико-математического факультета МГУ, бизнес-аналитик в IT консалтинговой компании, жена и мама двоих детей.
+  </div>
+    <a href="/about"><button class = "read-more">Читать далее</button></a>
+    <hr class = "read-more-line">
+    </section>
+
+    <div class="sign-up-box">
+      <h2>Подписка</h2>
+      <hr class = "read-more-line">
+      <h3>Получайте уведомления о новых постах прямо на Вашу почту!</h3>
+    <form  class = "sing-up-form" action="/subscribe" method="post">
+      <input type="email" name="email" class = "email" placeholder="Email" required>
+      <input type="submit" name="" value="Подписаться">
+    </form>
+    </div>
+
+    <!-- <div class="popular-posts-box">
+      <h2>Популярные посты</h2>
+      <hr class = "read-more-line">
+        <div class="post-short-info">
+          <img class = "post-photo" src="/static/img/post-photo.jpg" alt="">
+          <a href="#"><h2>Учим слова ассоциациями</h2></a>
+        </div>
+
+        <div class="post-short-info">
+          <img class = "post-photo" src="/static/img/work-station.jpg" alt="">
+          <a href="#"><h2>Как создавался этот блог</h2></a>
+        </div>
+    </div> -->
+
+</aside>
+
+
+
+</section>
+
+<script>
+    commentForm = document.querySelector(".comment-form");
+    commentForm.addEventListener('submit', function(e){
+      var username = document.querySelector(".username");
+      var email = document.querySelector(".email-field");
+      var message = document.querySelector(".message");
+      var website = document.querySelector(".website-input");
+      var flash = document.querySelector("#flash");
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/posts/show/{{.IDstr}}/comments', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.addEventListener('readystatechange', function() {
+          if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
+              commentForm.reset();
+              modal.style.visibility = "visible";
+              modal.style.opacity = "1";
+              modalText.textContent = xhr.responseText;
+          }
+      });
+      e.preventDefault();
+      xhr.send("username="+username.value+"&email="+email.value+"&message="+message.value+"&website="+website.value);
+    })
+</script>
+
+<script>
+var likeButton = document.querySelector(".like-button");
+var likesNum = document.querySelector(".likes-number");
+likeButton.onclick = function(e) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/posts/show/{{.IDstr}}', true);
+  xhr.addEventListener('readystatechange', function() {
+      if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
+          var data = JSON.parse(xhr.responseText);
+          console.log(data);
+          // modal.style.display = "block";
+          modal.style.visibility = "visible";
+          modal.style.opacity = "1";
+          modalText.textContent = data.message;
+          likesNum.textContent = data.likes;
+      }
+  });
+  e.preventDefault();
+  xhr.send();
+};
+</script>
+<script type="text/javascript" src="/static/js/modalFunctionality.js"></script>
+<script type="text/javascript" src="/static/js/subscribe.js"></script>
+
+{{template "footer"}}
