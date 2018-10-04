@@ -3,8 +3,19 @@ html {
   color: #333;
 }
 
+/* Disable fontboosting */
+html * {
+    max-height:1000000px;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: none;
+}
+
 p, h1, h2, h3, h4, h5, h6 {
   line-height: 130%;
+}
+
+strong {
+    font-weight: bold;
 }
 
 h1 {
@@ -376,6 +387,8 @@ input[type=email], input[type=submit], input[type=text], textarea, #load-more-bt
   font-size: 0.9rem;
 }
 
+
+
 input[type=submit] {
   font-size: 1rem;
 }
@@ -405,7 +418,9 @@ input[type=submit]:hover, #load-more-btn:hover {
 }
 
 #load-more-btn {
-width: 40%;
+    width: 40%;
+    margin-top: 0;
+    margin-bottom: 1rem;
 }
 
 .contact-form {
