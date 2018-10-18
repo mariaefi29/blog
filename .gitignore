@@ -9,3 +9,7 @@ config/credentials.go
 app.yaml
 
 # dep files
+
+# my images
+
+/public/img

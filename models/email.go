@@ -1,7 +1,9 @@
 package models
 
 import (
+	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/mariaefi29/blog/config"
@@ -27,9 +29,18 @@ func CreateEmail(r *http.Request) (Email, error) {
 	email.ID = bson.NewObjectId()
 	email.EmailAddress = r.FormValue("email")
 
+	xcode, err := strconv.Atoi(r.FormValue("xcode"))
+	if err != nil {
+		log.Println(err)
+	}
+
 	// validate form values
 	if email.EmailAddress == "" {
 		return email, errors.New("400 bad request: all fields must be complete")
+	}
+
+	if xcode != 776 {
+		return email, errors.New("400 bad request: you are a bot")
 	}
 
 	// insert values to a database

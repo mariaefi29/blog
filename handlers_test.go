@@ -201,6 +201,7 @@ func TestComment(t *testing.T) {
 		form.Add("username", "Test user")
 		form.Add("email", "test@gmail.com")
 		form.Add("website", "test.com")
+		form.Add("xcode2", "776")
 		testComment := strings.NewReader(form.Encode())
 
 		writer := httptest.NewRecorder()
@@ -242,6 +243,7 @@ func TestSubscribe(t *testing.T) {
 
 	form := url.Values{}
 	form.Add("email", "test@gmail.com")
+	form.Add("xcode", "776")
 
 	//remove test email from a database
 	err2 := config.Emails.Remove(bson.M{"email": "test@gmail.com"})
@@ -267,6 +269,7 @@ func TestSubscribe(t *testing.T) {
 
 	form2 := url.Values{}
 	form2.Add("email", result.EmailAddress)
+	form2.Add("xcode", "776")
 	//subscribe by an existed email
 
 	req2 := httptest.NewRequest("POST", ts.URL+"/subscribe", strings.NewReader(form2.Encode()))
@@ -285,4 +288,10 @@ func TestSubscribe(t *testing.T) {
 	if string(body2) != fail {
 		t.Errorf("Expected a fail message: %v, but got %v", fail, string(body2))
 	}
+
+	err3 := config.Emails.Remove(bson.M{"email": "test@gmail.com"})
+	if err3 != nil {
+		t.Errorf("Database error is %v", err2)
+	}
+
 }

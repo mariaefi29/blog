@@ -30,17 +30,13 @@
       <div class = "post-end">
         <a href="/about"><h4>By {{.Author}}</h4></a>
         <div class="likes">
-          <!-- <form action="/posts/show/{{.IDstr}}" method="post">
-            <button type="submit" name="button">
-              <svg id = "heart"><use xlink:href="#heart"></use></svg>
-            </button>
-          </form> -->
+
           <button class = "like-button" type="submit" name="button">
             <svg id = "heart"><use xlink:href="#heart"></use></svg>
           </button>
           <span class = "likes-number">{{.Likes}}</span>
           </div>
-        <!-- <svg id = "heart"><use xlink:href="#heart"></use></svg> -->
+
         <a href="#comments"><h4>{{incline .CommentCnt}}</h4></a>
       </div>
 
@@ -62,7 +58,6 @@
 
       {{if ne .CommentCnt 0}}
 
-      <!-- <header class = "comment-header">{{incline .CommentCnt}}</header> -->
       <header class = "comment-header">Комментарии</header>
 
       {{end}}
@@ -97,6 +92,8 @@
 
         <label for="website">Веб сайт</label>
         <input type="text" name="website" class = "website-input"><br>
+        <!-- hidden field protects the website from bots -->
+        <input type="hidden" name="xcode2" id="r3d3" value="0">
 
         <input class = "send-button" type="submit" name="" value="Отправить" required>
 
@@ -109,28 +106,9 @@
   </section>
 
 
-
-<!-- </main> -->
 <aside>
 
-  <section class = "about-me">
-  <img src="/static/img/myphoto.png" alt="">
-  <div class = "content">Всем привет! Меня зовут Мария Ефименко.
-    Я выпускница механико-математического факультета МГУ, бизнес-аналитик в IT консалтинговой компании, жена и мама двоих детей.
-  </div>
-    <a href="/about"><button class = "read-more">Читать далее</button></a>
-    <hr class = "read-more-line">
-    </section>
-
-    <div class="sign-up-box">
-      <h2>Подписка</h2>
-      <hr class = "read-more-line">
-      <h3>Получайте уведомления о новых постах прямо на Вашу почту!</h3>
-    <form  class = "sing-up-form" action="/subscribe" method="post">
-      <input type="email" name="email" class = "email" placeholder="Email" required>
-      <input type="submit" name="" value="Подписаться">
-    </form>
-    </div>
+  {{template "aside"}}
 
     <!-- <div class="popular-posts-box">
       <h2>Популярные посты</h2>
@@ -153,6 +131,8 @@
 </section>
 
 <script>
+    var xcode2 = document.getElementById("r3d3");
+    xcode2.value = 776;
     commentForm = document.querySelector(".comment-form");
     commentForm.addEventListener('submit', function(e){
       var username = document.querySelector(".username");
@@ -172,7 +152,7 @@
           }
       });
       e.preventDefault();
-      xhr.send("username="+username.value+"&email="+email.value+"&message="+message.value+"&website="+website.value);
+      xhr.send("username="+username.value+"&email="+email.value+"&message="+message.value+"&website="+website.value+"&xcode2="+xcode2.value);
     })
 </script>
 

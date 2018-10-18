@@ -1,7 +1,9 @@
 package models
 
 import (
+	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
@@ -24,6 +26,8 @@ type Comment struct {
 //CreateComment puts a comment to a post into a database
 func CreateComment(r *http.Request, idstr string) (Comment, Post, error) {
 
+	decoder.IgnoreUnknownKeys(true)
+
 	config.Session.Refresh()
 	currentSession := config.Session.Copy()
 	defer currentSession.Close()
@@ -31,6 +35,16 @@ func CreateComment(r *http.Request, idstr string) (Comment, Post, error) {
 	// get form values
 	comment := Comment{}
 	post := Post{}
+
+	//this method protects the website from bots
+	xcode2, err := strconv.Atoi(r.FormValue("xcode2"))
+	if err != nil {
+		log.Println(err)
+	}
+
+	if xcode2 != 776 {
+		return comment, post, errors.New("400 bad request: you are a bot")
+	}
 
 	post, err1 := OnePost(idstr)
 	if err1 != nil {

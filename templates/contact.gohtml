@@ -24,7 +24,8 @@
 
     <label for="message">Сообщение*</label>
     <textarea name="message" rows="12" class = "message"></textarea>
-
+    <!-- hidden field protects the website from bots -->
+    <input type="hidden" name="xcode3" id="r4d4" value="0">
     <input class = "send-button" type="submit" name="" value="Отправить" required>
 
   </form>
@@ -40,11 +41,12 @@
 
 <script>
 var form = document.querySelector(".contact-form");
-console.log(form);
+var xcode3 = document.getElementById("xcode3");
 form.addEventListener('submit', function(e){
   var name = document.querySelector(".name");
   var message = document.querySelector(".message");
   var email = document.querySelector(".email");
+  xcode3.value = 776;
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/contact', true);
   xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -58,7 +60,7 @@ form.addEventListener('submit', function(e){
       }
   });
   e.preventDefault();
-  xhr.send("name="+name.value+"&email="+email.value+"&message="+message.value);
+  xhr.send("name="+name.value+"&email="+email.value+"&message="+message.value+"&xcode3="+xcode3.value));
 })
 
 </script>

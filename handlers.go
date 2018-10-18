@@ -114,6 +114,17 @@ func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 		log.Fatalln(err)
 	}
 
+	xcode3, err1 := strconv.Atoi(req.FormValue("xcode3"))
+	if err1 != nil {
+		log.Println(err1)
+	}
+
+	if xcode3 != 776 {
+		http.Error(w, http.StatusText(400), http.StatusInternalServerError)
+		log.Println("400 bad request: you are a bot")
+		return
+	}
+
 	msg := &message{
 		name:    req.FormValue("name"),
 		email:   req.FormValue("email"),
