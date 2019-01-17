@@ -3,7 +3,6 @@ body {
   grid-template-columns: 1fr 650px 300px 1fr;
 }
 
-
 .about-main {
   grid-column-gap: 2rem;
 }

@@ -41,12 +41,12 @@
 
 <script>
 var form = document.querySelector(".contact-form");
-var xcode3 = document.getElementById("xcode3");
+var xcode3 = document.getElementById("r4d4");
+xcode3.value = 776;
 form.addEventListener('submit', function(e){
   var name = document.querySelector(".name");
   var message = document.querySelector(".message");
   var email = document.querySelector(".email");
-  xcode3.value = 776;
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/contact', true);
   xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -60,7 +60,7 @@ form.addEventListener('submit', function(e){
       }
   });
   e.preventDefault();
-  xhr.send("name="+name.value+"&email="+email.value+"&message="+message.value+"&xcode3="+xcode3.value));
+  xhr.send("name="+name.value+"&email="+email.value+"&message="+message.value+"&xcode3="+xcode3.value);
 })
 
 </script>

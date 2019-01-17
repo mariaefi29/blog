@@ -187,14 +187,9 @@ input[type="checkbox"]:checked + #sidebar {
 
 .content {
   width: 100%;
-  /* display: flex; */
-  /* flex-flow: column nowrap;
-  justify-content: flex-start;
-  align-items: center; */
   text-align: left;
   font-size: 1rem;
   line-height: 130%;
-  /*margin-bottom: 1.8rem;*/
   margin-bottom: 1rem;
 }
 
@@ -221,7 +216,6 @@ input[type="checkbox"]:checked + #sidebar {
   font-size: 1.2rem;
   transition: color 0.3s ease;
   font-family: 'Marck Script', cursive;
-  /*margin-top: 1.8rem;*/
 }
 
 .read-more:hover {
@@ -255,9 +249,6 @@ input[type="checkbox"]:checked + #sidebar {
 }
 
 #heart {
-  /*width: 38.75px;
-  height: 38.75px;
-  display: block;*/
   fill: #d03b39;
   transition: all 0.3s ease-in-out;
 }
@@ -270,11 +261,8 @@ input[type="checkbox"]:checked + #sidebar {
 
 .about-me {
   background-color: #f6f2e8;
-  /*border: 15px solid #f6f2e8;*/
   border-radius: 5px;
-  /*padding: 0.6rem 0.4rem 0.6rem 0.6rem;*/
   padding: 1.5rem;
-  /*margin-bottom: 2rem;*/
 }
 
 
@@ -286,7 +274,6 @@ aside img {
 aside .content {
   width: 100%;
   margin-bottom: 1rem;
-  /*text-align: center;*/
 }
 
 footer {
@@ -297,7 +284,6 @@ footer {
   align-items: center;
   border-top: 1.2px solid #d03b39;
   background-color: #fbf9f4;
-  /*height: fit-content;*/
 }
 
 footer > a {
@@ -312,11 +298,6 @@ footer > a {
   margin-bottom: 1.5rem;
   margin-top: 0.5rem;
 }
-
-
-/* .abt-content, .abt-content-1  {
-  margin-top: 0.5rem;
-} */
 
 .empty-body {
   height: 100vh;
@@ -357,12 +338,7 @@ aside h3 {
   text-align: center;
 }
 
-/*.post-snippet {
-  margin-bottom:
-}*/
-
 form label {
-
   display: inline-block;
   font-style: italic;
   margin-top: 0.5rem;
@@ -386,8 +362,6 @@ input[type=email], input[type=submit], input[type=text], textarea, #load-more-bt
   padding: 0.5rem;
   font-size: 0.9rem;
 }
-
-
 
 input[type=submit] {
   font-size: 1rem;
@@ -429,7 +403,6 @@ input[type=submit]:hover, #load-more-btn:hover {
 }
 
 .contact-form > input[type=submit], .comment-form > input[type=submit] {
-  /*width: fit-content;*/
   width: 9rem;
   height: 100%;
   margin-top: 0.5rem;
@@ -454,8 +427,6 @@ input[type=submit]:hover, #load-more-btn:hover {
   font-size: 1.1rem;
   font-style: italic;
   margin: 1rem 0.5rem 0rem 0rem;
-  /*font-family: 'Marck Script', cursive;
-  font-size: 1.5rem;*/
 }
 
 .post-short-info {
@@ -479,12 +450,8 @@ input:invalid {
 }*/
 
 .comment-header {
-  /*border-bottom: 1px solid #d6d6d6;*/
-  /*border-bottom: 1px solid #e48d8b;*/
-  /*border-bottom: 1.2px solid #d03b39;*/
   font-family: 'Marck Script', cursive;
   font-size: 1.5rem;
-  /*font-size: 1.2rem;*/
   margin-bottom: 2.5rem;
   padding: 0  1rem;
   text-align: center;
@@ -495,14 +462,10 @@ input:invalid {
   flex-flow: column nowrap;
   justify-content: space-between;
   align-items: flex-start;
-  /*border: 0.5px solid #d03b39;*/
   border-radius: 20px;
   margin-bottom: 2rem;
-  /*padding: 0 1rem 2rem 1rem;*/
   padding: 1.5rem;
-  /*background-color: #fbf9f4;*/
   background-color: #f6f2e8;
-
   width: 80%;
 }
 
@@ -531,14 +494,11 @@ input:invalid {
 
 .comment-author > h2 {
   text-transform: uppercase;
-  /*margin-bottom: 0.5rem;*/
-  /*color: #d03b39;*/
 }
 
 .comment-date {
   color: #d7c390;
   font-size: 1.1rem;
-  /*margin-bottom: 0.5rem;*/
   align-self: flex-end;
 }
 
@@ -547,7 +507,6 @@ input:invalid {
   color: #d03b39;
   font-style: italic;
   font-size: 0.9rem;
-  /*margin-bottom: 0.5rem;*/
 }
 
 .success-flash {
@@ -563,10 +522,8 @@ input:invalid {
   align-items: center;
 }
 
-/*.likes-number {
-  align-self: flex-end;
-}*/
 /* The Modal (background) */
+
 .modal {
     /*display: none;*/
     position: fixed; /* Stay in place */
@@ -577,10 +534,7 @@ input:invalid {
     display: flex;
     justify-content: center;
     align-items: center;
-    /*height: 100%;*/
     height: 100vh;
-    /*grid-row: -1/1;
-    grid-column: -1/-1;*/
     overflow: auto; /* Enable scroll if needed */
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
@@ -597,7 +551,6 @@ input:invalid {
     background-color: #fbf9f4;
     margin: 1rem;
     padding: 0.5rem 1rem;
-    /*border: 1px solid #d03b39;*/
     border-radius: 5px;
     width: 28rem; /* Could be more or less, depending on screen size */
     height: 18rem;
@@ -613,10 +566,7 @@ input:invalid {
   font-size: 1.4rem;
   grid-row: 2/2;
   grid-column: 2/2;
-  /*color: #d03b39;*/
   color: #333;
-  /*margin: auto 0;*/
-
 }
 
 #check {
@@ -643,7 +593,6 @@ input:invalid {
     color: #aaa;
     grid-row: 1/1;
     grid-column: 3/3;
-    /*align-self: flex-end;*/
     float: right;
     font-size: 28px;
     font-weight: bold;
@@ -670,8 +619,6 @@ input:invalid {
 
 .profile-pages > a {
   margin: 0 0.5rem;
-  /*width: 1.5rem;
-  height: 1.5rem*/
 }
 
 .profile-pages > a > svg {
@@ -686,12 +633,10 @@ input:invalid {
   justify-content: space-between;
   align-items: center;
   margin-top: 2rem;
-  /*font-size: 0.5rem;*/
   font-family: 'Marck Script', cursive;
 }
 
 .post-sequence > a {
-  /*width: 10%;*/
   display: flex;
   flex-flow: row nowrap;
   justify-content: space-around;
