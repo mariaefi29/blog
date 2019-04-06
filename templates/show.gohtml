@@ -32,7 +32,7 @@
         <div class="likes">
 
           <button class = "like-button" type="submit" name="button">
-            <svg id = "heart"><use xlink:href="#heart"></use></svg>
+            <svg id = "heart"><use href="#svg_heart" xlink:href="#svg_heart"></use></svg>
           </button>
           <span class = "likes-number">{{.Likes}}</span>
           </div>
@@ -42,13 +42,13 @@
 
       <div class="post-sequence">
         {{if ne .PrevPostIDstr ""}}
-        <a href="/posts/show/{{.PrevPostIDstr}}"><svg id = "leftarrow"><use xlink:href="#leftarrow"></use></svg></a>
+        <a href="/posts/show/{{.PrevPostIDstr}}"><svg id = "leftarrow"><use href="#svg_leftarrow" xlink:href="#svg_leftarrow"></use></svg></a>
         {{else}}
         <div class="empty">
         </div>
         {{end}}
         {{if ne .NextPostIDstr ""}}
-        <a href="/posts/show/{{.NextPostIDstr}}"><svg id = "rightarrow"><use xlink:href="#rightarrow"></use></svg></a>
+        <a href="/posts/show/{{.NextPostIDstr}}"><svg id = "rightarrow"><use href="#svg_rightarrow" xlink:href="#svg_rightarrow"></use></svg></a>
         {{end}}
       </div>
 

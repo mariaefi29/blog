@@ -26,6 +26,24 @@ p {
   margin-bottom: 1rem;
 }
 
+pre {
+    background: #eeeeee;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0 0 1.6em;
+    max-width: 100%;
+    overflow: auto;
+    padding: 1.3em;
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+ code {
+  font-family: 'Source Code Pro', monospace;
+  background: #eeeeee;
+}
+
 nav {
   width: 100%;
   height: fit-content;
