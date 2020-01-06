@@ -40,7 +40,7 @@ func setUp() {
 
 // TestIndex is the simplest test: check base (/) URL
 func TestIndex(t *testing.T) {
-
+	t.Parallel()
 	writer := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", ts.URL+"/", nil)
 
@@ -55,7 +55,7 @@ func TestIndex(t *testing.T) {
 // TestShow: check (/posts/show/:id) URL
 // takes out all ids of all posts from a database and checks if these requests are successful
 func TestShow(t *testing.T) {
-
+	t.Parallel()
 	//retrieves all posts from a database
 	allPosts, err := models.AllPosts()
 	if err != nil {
@@ -80,7 +80,7 @@ func TestShow(t *testing.T) {
 
 // TestLike: check post request to (/posts/show/:id) URL
 func TestLike(t *testing.T) {
-
+	t.Parallel()
 	updatedPost := models.Post{} //a modifed post after a post request
 
 	//retrieves all posts from a database
@@ -89,7 +89,7 @@ func TestLike(t *testing.T) {
 		t.Errorf("Database error is %v", err)
 	}
 
-	//constracts requests for each id and checks if they are successful
+	//contracts requests for each id and checks if they are successful
 	for i := range allPosts {
 		writer := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", ts.URL+"/posts/show/"+allPosts[i].IDstr, nil)
@@ -103,18 +103,16 @@ func TestLike(t *testing.T) {
 			t.Errorf("Response code is %v", writer.Code)
 		}
 
-		err2 := config.Posts.Find(bson.M{"_id": allPosts[i].ID}).One(&updatedPost)
-		if err2 != nil {
-			t.Errorf("Database error is %v", err2)
+		if err := config.Posts.Find(bson.M{"_id": allPosts[i].ID}).One(&updatedPost); err != nil {
+			t.Errorf("Database error is %v", err)
 		}
 		//check if the number of likes was added by one after a post request
 		if updatedPost.Likes != allPosts[i].Likes+1 {
 			t.Errorf("The likes number supposed to be %d, but got %d", allPosts[i].Likes+1, updatedPost.Likes)
 		} else {
 			//put an initial post back in the database before the post request happen
-			err3 := config.Posts.Update(bson.M{"_id": allPosts[i].ID}, &allPosts[i])
-			if err3 != nil {
-				t.Errorf("Database error is %v", err3)
+			if err := config.Posts.Update(bson.M{"_id": allPosts[i].ID}, &allPosts[i]); err != nil {
+				t.Errorf("Database error is %v", err)
 			}
 		}
 
@@ -123,6 +121,7 @@ func TestLike(t *testing.T) {
 
 // TestLike: check (/about) URL
 func TestAbout(t *testing.T) {
+	t.Parallel()
 	writer := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", ts.URL+"/about", nil)
 
@@ -135,7 +134,7 @@ func TestAbout(t *testing.T) {
 
 // TestContact: check get request to (/contact) URL
 func TestContact(t *testing.T) {
-
+	t.Parallel()
 	writer := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", ts.URL+"/contact", nil)
 
@@ -149,18 +148,16 @@ func TestContact(t *testing.T) {
 
 // TestCategory: check get request to (/category/:category) URL
 func TestCategory(t *testing.T) {
-
-	var categories []string
-
+	t.Parallel()
+	categories := make([]string, 0)
 	//retrieves all distinct categories from a database
-	err1 := config.Posts.Find(nil).Distinct("categoryeng", &categories)
-	if err1 != nil {
-		t.Errorf("Database error is %v", err1)
+	if err := config.Posts.Find(nil).Distinct("categoryeng", &categories); err != nil {
+		t.Errorf("Database error is %v", err)
 	}
 
 	categoryMap := make(map[string]int) //contains category and the amount of posts in it
 
-	//constracts requests for each category and checks if there are working
+	//contracts requests for each category and checks if there are working
 	for i, v := range categories {
 		categoryMap[v], _ = config.Posts.Find(bson.M{"categoryeng": v}).Count()
 		writer := httptest.NewRecorder()
@@ -187,7 +184,7 @@ func TestCategory(t *testing.T) {
 }
 
 func TestComment(t *testing.T) {
-
+	t.Parallel()
 	//retrieves all posts from a database
 	allPosts, err := models.AllPosts()
 	if err != nil {
@@ -195,7 +192,7 @@ func TestComment(t *testing.T) {
 	}
 
 	for i := range allPosts {
-		//constracts a test comment
+		//contracts a test comment
 		form := url.Values{}
 		form.Add("message", "Test message")
 		form.Add("username", "Test user")
@@ -217,39 +214,33 @@ func TestComment(t *testing.T) {
 			t.Errorf("Response code is %v", writer.Code)
 		} else {
 			//put an initial post back in the database without a test comment
-			err3 := config.Posts.Update(bson.M{"_id": allPosts[i].ID}, &allPosts[i])
-			if err3 != nil {
-				t.Errorf("Database error is %v", err3)
+			if err := config.Posts.Update(bson.M{"_id": allPosts[i].ID}, &allPosts[i]); err != nil {
+				t.Errorf("Database error is %v", err)
 			}
-			err4 := config.Comments.Remove(bson.M{"email": "test@gmail.com"})
-			if err4 != nil {
-				t.Errorf("cannot remove a test comment: database error is %v", err4)
+
+			if err := config.Comments.Remove(bson.M{"email": "test@gmail.com"}); err != nil {
+				t.Errorf("cannot remove a test comment: database error is %v", err)
 			}
 		}
 	}
 }
 
 func TestSubscribe(t *testing.T) {
+	t.Parallel()
 	success := "Вы успешно подписаны на обновления блога!"
 	fail := "Вы уже были подписаны на обновления блога!"
 	writer := httptest.NewRecorder()
 	writer2 := httptest.NewRecorder()
 
 	result := models.Email{}
-	err1 := config.Emails.Find(nil).One(&result)
-	if err1 != nil {
-		t.Errorf("Database error is %v", err1)
+	if err := config.Emails.Find(nil).One(&result); err != nil {
+		t.Errorf("Database error is %v", err)
 	}
 
 	form := url.Values{}
 	form.Add("email", "test@gmail.com")
-	form.Add("xcode", "776")
+	form.Add("noshow", "454")
 
-	//remove test email from a database
-	err2 := config.Emails.Remove(bson.M{"email": "test@gmail.com"})
-	if err2 != nil {
-		t.Errorf("Database error is %v", err2)
-	}
 	//subscribe by a test email
 	req := httptest.NewRequest("POST", ts.URL+"/subscribe", strings.NewReader(form.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -269,7 +260,7 @@ func TestSubscribe(t *testing.T) {
 
 	form2 := url.Values{}
 	form2.Add("email", result.EmailAddress)
-	form2.Add("xcode", "776")
+	form2.Add("noshow", "454")
 	//subscribe by an existed email
 
 	req2 := httptest.NewRequest("POST", ts.URL+"/subscribe", strings.NewReader(form2.Encode()))
@@ -289,9 +280,8 @@ func TestSubscribe(t *testing.T) {
 		t.Errorf("Expected a fail message: %v, but got %v", fail, string(body2))
 	}
 
-	err3 := config.Emails.Remove(bson.M{"email": "test@gmail.com"})
-	if err3 != nil {
-		t.Errorf("Database error is %v", err2)
+	if err := config.Emails.Remove(bson.M{"email": "test@gmail.com"}); err != nil {
+		t.Errorf("Database error is %v", err)
 	}
 
 }

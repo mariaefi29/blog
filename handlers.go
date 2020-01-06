@@ -62,15 +62,13 @@ func commentIncline(cnt int) string {
 }
 
 func index(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	posts, error := models.AllPosts()
-	if error != nil {
-		http.Error(w, http.StatusText(500)+" "+error.Error(), http.StatusInternalServerError)
+	posts, err := models.AllPosts()
+	if err != nil {
+		http.Error(w, http.StatusText(500)+" "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err := tpl.ExecuteTemplate(w, "index.gohtml", posts)
-	if err != nil {
+	if err := tpl.ExecuteTemplate(w, "index.gohtml", posts); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -81,46 +79,43 @@ func show(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		http.Error(w, http.StatusText(400), http.StatusBadGateway)
 		return
 	}
-	post, error := models.OnePost(id)
-	if error != nil {
-		http.Error(w, http.StatusText(500)+" "+error.Error(), http.StatusInternalServerError)
-		fmt.Println(error)
+
+	post, err := models.OnePost(id)
+	if err != nil {
+		http.Error(w, http.StatusText(500)+" "+err.Error(), http.StatusInternalServerError)
+		log.Println(err)
 		return
 	}
 
-	err := tpl.ExecuteTemplate(w, "show.gohtml", post)
-	if err != nil {
+	if err := tpl.ExecuteTemplate(w, "show.gohtml", post); err != nil {
 		log.Fatalln(err)
 	}
 }
 
 func about(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	err := tpl.ExecuteTemplate(w, "about.gohtml", nil)
-	if err != nil {
+	if err := tpl.ExecuteTemplate(w, "about.gohtml", nil); err != nil {
 		log.Fatalln(err)
 	}
 }
 
 func contact(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	error := tpl.ExecuteTemplate(w, "contact.gohtml", nil)
-	if error != nil {
-		log.Fatalln(error)
+	if err := tpl.ExecuteTemplate(w, "contact.gohtml", nil); err != nil {
+		log.Fatalln(err)
 	}
 }
 
 func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	err := req.ParseForm()
-	if err != nil {
+	if err := req.ParseForm(); err != nil {
 		log.Fatalln(err)
 	}
 
-	xcode3, err1 := strconv.Atoi(req.FormValue("xcode3"))
-	if err1 != nil {
-		log.Println(err1)
+	xcode3, err := strconv.Atoi(req.FormValue("xcode3"))
+	if err != nil {
+		log.Println(err)
 	}
 
 	if xcode3 != 776 {
-		http.Error(w, http.StatusText(400), http.StatusInternalServerError)
+		http.Error(w, http.StatusText(400), http.StatusBadRequest)
 		log.Println("400 bad request: you are a bot")
 		return
 	}
@@ -148,13 +143,12 @@ func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 }
 
 func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-	email, error := models.CreateEmail(req)
-	if error != nil && mgo.IsDup(errors.Cause(error)) {
+	email, err := models.CreateEmail(req)
+	if err != nil && mgo.IsDup(errors.Cause(err)) {
 		fmt.Fprint(w, "Вы уже были подписаны на обновления блога!")
 		return
 	}
-	if error != nil {
+	if err != nil {
 		fmt.Fprint(w, "Произошла ошибка сервера. Попробуйте еще раз позже.")
 		return
 	}
@@ -168,6 +162,7 @@ func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	if err := d.DialAndSend(m); err != nil {
 		log.Println(err)
 	}
+
 	fmt.Fprint(w, "Вы успешно подписаны на обновления блога!")
 }
 
@@ -178,14 +173,13 @@ func category(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	posts, error := models.PostsByCategory(category)
-	if error != nil {
-		http.Error(w, http.StatusText(500)+" "+error.Error(), http.StatusInternalServerError)
+	posts, err := models.PostsByCategory(category)
+	if err != nil {
+		http.Error(w, http.StatusText(500)+" "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err := tpl.ExecuteTemplate(w, "category.gohtml", posts)
-	if err != nil {
+	if err := tpl.ExecuteTemplate(w, "category.gohtml", posts); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -197,9 +191,9 @@ func comment(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	comment, post, error := models.CreateComment(req, id)
-	if error != nil {
-		log.Println(error)
+	comment, post, err := models.CreateComment(req, id)
+	if err != nil {
+		log.Println(err)
 		fmt.Fprint(w, "Произошла ошибка сервера. Попробуйте еще раз позже.")
 		return
 	}
@@ -219,7 +213,6 @@ func comment(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 }
 
 func like(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
-
 	type Data struct {
 		Message string `json:"message"`
 		NewLike int    `json:"likes"`
@@ -228,25 +221,26 @@ func like(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 	var sendData Data
 	id := ps.ByName("id")
 	if id == "" {
-		http.Error(w, http.StatusText(400), http.StatusBadGateway)
+		http.Error(w, http.StatusText(400), http.StatusBadRequest)
 		return
 	}
+
 	post, err := models.OnePost(id)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	_, err1 := req.Cookie(ps.ByName("id"))
-	if err1 != nil {
+	_, err = req.Cookie(ps.ByName("id"))
+	if err != nil {
 		http.SetCookie(w, &http.Cookie{
 			Name:  ps.ByName("id"),
 			Value: "1",
 		})
 
-		newLike, error := models.PostLike(post)
-		if error != nil {
-			http.Error(w, http.StatusText(406)+error.Error(), http.StatusNotAcceptable)
-			log.Println(error)
+		newLike, err := models.PostLike(post)
+		if err != nil {
+			http.Error(w, http.StatusText(500)+err.Error(), http.StatusInternalServerError)
+			log.Println(err)
 			return
 		}
 		s := `Спасибо! Ваше мнение учтено!`

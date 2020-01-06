@@ -25,16 +25,11 @@ type Comment struct {
 
 //CreateComment puts a comment to a post into a database
 func CreateComment(r *http.Request, idstr string) (Comment, Post, error) {
-
 	decoder.IgnoreUnknownKeys(true)
 
 	config.Session.Refresh()
 	currentSession := config.Session.Copy()
 	defer currentSession.Close()
-
-	// get form values
-	comment := Comment{}
-	post := Post{}
 
 	//this method protects the website from bots
 	xcode2, err := strconv.Atoi(r.FormValue("xcode2"))
@@ -43,38 +38,39 @@ func CreateComment(r *http.Request, idstr string) (Comment, Post, error) {
 	}
 
 	if xcode2 != 776 {
-		return comment, post, errors.New("400 bad request: you are a bot")
+		return Comment{}, Post{}, errors.New("400 bad request: you are a bot")
 	}
 
-	post, err1 := OnePost(idstr)
-	if err1 != nil {
-		return comment, post, errors.Wrap(err1, "fail to find a post to comment")
+	post, err := OnePost(idstr)
+	if err != nil {
+		return Comment{}, Post{}, errors.Wrap(err, "fail to find a post to comment")
 	}
 
-	err2 := r.ParseForm()
-	if err2 != nil {
-		return comment, post, errors.Wrap(err2, "fail to parse a comment form")
+	if err := r.ParseForm(); err != nil {
+		return Comment{}, Post{}, errors.Wrap(err, "fail to parse a comment form")
 	}
-	comment.ID = bson.NewObjectId()
-	comment.PostID = bson.ObjectIdHex(idstr)
-	currentTime := time.Now()
-	comment.CreatedAt = currentTime.Format("02.01.2006 15:04:05")
-	comment.ApprovedFlg = 0
 
-	err3 := decoder.Decode(&comment, r.PostForm)
-	if err3 != nil {
-		return comment, post, errors.Wrap(err3, "fail to decode form into a struct")
+	comment := Comment{
+		ID:          bson.NewObjectId(),
+		PostID:      bson.ObjectIdHex(idstr),
+		CreatedAt:   time.Now().Format("02.01.2006 15:04:05"),
+		ApprovedFlg: 0,
+	}
+
+	err = decoder.Decode(&comment, r.PostForm)
+	if err != nil {
+		return Comment{}, Post{}, errors.Wrap(err, "fail to decode form into a struct")
 	}
 
 	// validate form values
 	if comment.Email == "" || comment.Author == "" || comment.Content == "" {
-		return comment, post, errors.New("400 bad request: all fields must be complete")
+		return Comment{},  Post{}, errors.New("400 bad request: all fields must be complete")
 	}
 
 	// insert values to a database
-	err4 := config.Comments.Insert(comment)
-	if err4 != nil {
-		return comment, post, errors.Wrap(err4, "Database error: fail to insert a comment")
+	err = config.Comments.Insert(comment)
+	if err != nil {
+		return Comment{},  Post{}, errors.Wrap(err, "Database error: fail to insert a comment")
 	}
 
 	//update a post
@@ -86,9 +82,9 @@ func CreateComment(r *http.Request, idstr string) (Comment, Post, error) {
 		}
 	}
 
-	err5 := config.Posts.Update(bson.M{"_id": post.ID}, &post)
-	if err5 != nil {
-		return comment, post, errors.Wrap(err5, "Database error: fail to update a post with a new comment")
+	err = config.Posts.Update(bson.M{"_id": post.ID}, &post)
+	if err != nil {
+		return Comment{}, Post{}, errors.Wrap(err, "Database error: fail to update a post with a new comment")
 	}
 
 	return comment, post, nil

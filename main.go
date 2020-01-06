@@ -1,14 +1,15 @@
 package main
 
 import (
+	"github.com/mariaefi29/blog/config"
 	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/mariaefi29/blog/config"
 )
 
 func main() {
+	defer config.Session.Close()
 	router := httprouter.New()
 	router.GET("/", index)
 	router.POST("/subscribe", subscribe)
@@ -21,5 +22,4 @@ func main() {
 	router.POST("/contact", sendMessage)
 	router.ServeFiles("/static/*filepath", http.Dir("public"))
 	log.Fatal(http.ListenAndServe(":8080", router))
-	defer config.Session.Close()
 }
