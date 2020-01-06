@@ -29,7 +29,7 @@ func CreateEmail(r *http.Request) (Email, error) {
 	email.ID = bson.NewObjectId()
 	email.EmailAddress = r.FormValue("email")
 
-	xcode, err := strconv.Atoi(r.FormValue("xcode"))
+	noshow, err := strconv.Atoi(r.FormValue("noshow"))
 	if err != nil {
 		log.Println(err)
 	}
@@ -39,7 +39,7 @@ func CreateEmail(r *http.Request) (Email, error) {
 		return email, errors.New("400 bad request: all fields must be complete")
 	}
 
-	if xcode != 776 {
+	if noshow != 454 {
 		return email, errors.New("400 bad request: you are a bot")
 	}
 

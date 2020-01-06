@@ -1,11 +1,9 @@
 var form = document.querySelector(".sing-up-form");
-var xcode = document.getElementById("r2d2");
-xcode.value = 776;
+var noshow = document.getElementById("r0d0");
+noshow.value = 454;
 console.log(form);
 form.addEventListener('submit', function(e){
   var email = document.querySelector(".email");
-  console.log(email.value);
-  console.log(xcode.value);
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/subscribe', true);
   xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -18,5 +16,5 @@ form.addEventListener('submit', function(e){
       }
   });
   e.preventDefault();
-  xhr.send("email="+email.value+"&xcode="+xcode.value);
+  xhr.send("email="+email.value+"&noshow="+noshow.value);
 })
