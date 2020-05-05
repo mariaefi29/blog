@@ -1,7 +1,6 @@
 var form = document.querySelector(".sing-up-form");
 var noshow = document.getElementById("r0d0");
 noshow.value = 454;
-console.log(form);
 form.addEventListener('submit', function(e){
   var email = document.querySelector(".email");
   var xhr = new XMLHttpRequest();

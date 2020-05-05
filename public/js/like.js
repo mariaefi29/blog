@@ -1,5 +1,4 @@
 var likeButton = document.querySelector(".like-button");
-console.log(likeButton);
 likeButton.onclick = function(e) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/posts/show/{{.IDstr}}', true);

@@ -49,9 +49,6 @@
 
   {{template "aside"}}
 
-
-
-
     <div class="popular-posts-box">
       <h2>Популярные посты</h2>
       <hr class = "read-more-line">
@@ -67,48 +64,33 @@
         {{end}}
 
     {{end}}
-
+    </div>
 </aside>
 
-
-</section>
 <script type="text/javascript" src="/static/js/modalFunctionality.js"></script>
 <script>
   var likeButton = document.querySelectorAll(".like-button");
   var likesNum = document.querySelectorAll(".likes-number");
-  var modalText = document.querySelector("#modal-text")
+  var modalText = document.querySelector("#modal-text");
   var modal = document.getElementById('myModal');
-  console.log(likeButton.length);
   for (var i=0; i<likeButton.length; i++) {
-    console.log(likeButton[i]);
       likeButton[i].onclick = function(e) {
         var postId = this.getAttribute("data-post-id");
         var likeNum = this.nextElementSibling;
-        console.log(this);
-        console.log(likeNum);
-        console.log(postId);
         var xhr = new XMLHttpRequest();
         xhr.open('POST', '/posts/show/'+postId, true);
         xhr.addEventListener('readystatechange', function() {
             if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
               var data = JSON.parse(xhr.responseText);
-              console.log(data);
-              // modal.style.display = "block";
               modal.style.visibility = "visible";
-              console.log(modal);
               modal.style.opacity = "1";
-              // modalContent.style.visibility = "visible"
-              // modalContent.style.opacity = "1"
               likeNum.textContent = data.likes;
-              console.log(likeNum.textContent);
               modalText.textContent = data.message;
-              console.log(modalText);
             }
         });
         e.preventDefault();
         xhr.send();
-  }};
-
+  }}
 </script>
 <script type="text/javascript" src="/static/js/subscribe.js"></script>
 <script type="text/javascript" src="/static/js/load-more-button.js"></script>

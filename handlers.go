@@ -29,7 +29,7 @@ type message struct {
 	content string
 }
 
-var d = gomail.NewDialer("smtp.gmail.com", 587, config.SMTPEmail, config.SMTPPassword)
+var d = gomail.NewDialer("smtp.mail.ru", 465, config.SMTPEmail, config.SMTPPassword)
 
 func init() {
 	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*.gohtml"))
@@ -112,6 +112,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 	xcode3, err := strconv.Atoi(req.FormValue("xcode3"))
 	if err != nil {
 		log.Println(err)
+		return
 	}
 
 	if xcode3 != 776 {
@@ -127,9 +128,9 @@ func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 	}
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", msg.email)
+	m.SetHeader("From", config.SMTPEmail)
 	m.SetHeader("To", "maria.efimenko29@gmail.com")
-	m.SetAddressHeader("reply-to", msg.email, msg.name)
+	m.SetAddressHeader("reply-to", config.SMTPEmail,"Мария")
 	m.SetHeader("Subject", "Блог/контактная форма")
 	m.SetBody("text/html", fmt.Sprintf("<b>Сообщение</b>: %s \n <b>От</b>: %s, %s", msg.content, msg.email, msg.name))
 
