@@ -21,3 +21,5 @@ The application is running now at [http://www.marialife.com](https://www.mariali
 4. Create environmental variables SMTP_EMAIL and SMTP_PASSWORD and assign them to an SMTP server credentials. This step is needed for a contact form to work, but is not necessary for the application to run.
 5. Run `make` in a command line in a working directory.
 6. Open http://localhost:8080/ in your browser and enjoy surfing.
+
+Note: It was my first project in Go. Now when I look at it with some experience, I would like to rewrite almost everything. I am planning to release a major version when I have time to rewrite all the code.
