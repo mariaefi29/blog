@@ -10,8 +10,6 @@
 {{template "logo"}}
 {{template "modal"}}
   <section class = "posts">
-
-
      <article class = "post">
       <header class = "post-header">
         <a href="/category/{{.CategoryEng}}"><h3 class = "topic-category">{{.Category}}</h3></a>
@@ -82,8 +80,6 @@
       <form class="comment-form" action="/posts/show/{{.IDstr}}/comments" method="POST">
       <!-- <form class="comment-form" method="POST"> -->
       <textarea class = "message" name="message" rows="8" required></textarea>
-
-
         <label for="username">Имя*</label>
         <input class = "username" type="text" name="username" required><br>
 
@@ -96,39 +92,13 @@
         <input type="hidden" name="xcode2" id="r3d3" value="0">
 
         <input class = "send-button" type="submit" name="" value="Отправить" required>
-
       </form>
-
     </section>
-
-
-
   </section>
 
-
 <aside>
-
   {{template "aside"}}
-
-    <!-- <div class="popular-posts-box">
-      <h2>Популярные посты</h2>
-      <hr class = "read-more-line">
-        <div class="post-short-info">
-          <img class = "post-photo" src="/static/img/post-photo.jpg" alt="">
-          <a href="#"><h2>Учим слова ассоциациями</h2></a>
-        </div>
-
-        <div class="post-short-info">
-          <img class = "post-photo" src="/static/img/work-station.jpg" alt="">
-          <a href="#"><h2>Как создавался этот блог</h2></a>
-        </div>
-    </div> -->
-
 </aside>
-
-
-
-</section>
 
 <script>
     var xcode2 = document.getElementById("r3d3");
@@ -165,8 +135,6 @@ likeButton.onclick = function(e) {
   xhr.addEventListener('readystatechange', function() {
       if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
           var data = JSON.parse(xhr.responseText);
-          console.log(data);
-          // modal.style.display = "block";
           modal.style.visibility = "visible";
           modal.style.opacity = "1";
           modalText.textContent = data.message;
