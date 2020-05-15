@@ -12,6 +12,8 @@ var (
 	SMTPEmail string
 	//SMTPPassword contains password of google smtp server
 	SMTPPassword string
+	//ReCaptchaSecretCode contains secret code for recaptcha validation
+	ReCaptchaSecretCode string
 )
 
 // DB instance of MongoDB
@@ -33,6 +35,8 @@ func init() {
 	//smtp server credentials
 	SMTPEmail = os.Getenv("SMTP_EMAIL")
 	SMTPPassword = os.Getenv("SMTP_PASSWORD")
+
+	ReCaptchaSecretCode = os.Getenv("RECAPTCHA_SECRET")
 
 	// get a mongo sessions
 	//DB_CONNECTION_STRING = mongodb://localhost/blog (env variable)

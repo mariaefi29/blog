@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/haisum/recaptcha"
+
 	"github.com/globalsign/mgo/bson"
 	"github.com/mariaefi29/blog/config"
 	"github.com/pkg/errors"
@@ -40,6 +42,16 @@ func CreateEmail(r *http.Request) (Email, error) {
 
 	if noshow != 454 {
 		return Email{}, errors.New("400 bad request: you are a bot")
+	}
+
+	re := recaptcha.R{
+		Secret: config.ReCaptchaSecretCode,
+	}
+	recaptchaResp := r.FormValue("g-recaptcha-response")
+	if !re.VerifyResponse(recaptchaResp) {
+		log.Println(recaptchaResp)
+		log.Println(re.Secret)
+		return Email{}, errors.New("400 bad request: failed to verify recaptcha")
 	}
 
 	// insert values to a database

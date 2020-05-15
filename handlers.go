@@ -13,7 +13,7 @@ import (
 	"github.com/mariaefi29/blog/config"
 	"github.com/mariaefi29/blog/models"
 	"github.com/pkg/errors"
-	gomail "gopkg.in/gomail.v2"
+	"gopkg.in/gomail.v2"
 )
 
 var tpl *template.Template
@@ -130,7 +130,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 	m := gomail.NewMessage()
 	m.SetHeader("From", config.SMTPEmail)
 	m.SetHeader("To", "maria.efimenko29@gmail.com")
-	m.SetAddressHeader("reply-to", config.SMTPEmail,"Мария")
+	m.SetAddressHeader("reply-to", config.SMTPEmail, "Мария")
 	m.SetHeader("Subject", "Блог/контактная форма")
 	m.SetBody("text/html", fmt.Sprintf("<b>Сообщение</b>: %s \n <b>От</b>: %s, %s", msg.content, msg.email, msg.name))
 
@@ -150,6 +150,7 @@ func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 		return
 	}
 	if err != nil {
+		log.Println(err)
 		fmt.Fprint(w, "Произошла ошибка сервера. Попробуйте еще раз позже.")
 		return
 	}
