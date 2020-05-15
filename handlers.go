@@ -193,6 +193,8 @@ func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 		return
 	}
 
+	_, _ = fmt.Fprint(w, "Вы успешно подписаны на обновления блога!")
+
 	messageToEmail := fmt.Sprintf("Поприветствуйте нового подписчика: %s.", email.EmailAddress)
 	if err := sendMessageToEmail("Блог/новый подписчик", messageToEmail); err != nil {
 		log.Println(errors.Wrap(err, "send new subscriber to email"))
