@@ -1,9 +1,6 @@
 package models
 
 import (
-	"log"
-	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/globalsign/mgo/bson"
@@ -24,53 +21,24 @@ type Comment struct {
 }
 
 //CreateComment puts a comment to a post into a database
-func CreateComment(r *http.Request, idstr string) (Comment, Post, error) {
-	decoder.IgnoreUnknownKeys(true)
-
+func CreateComment(comment Comment, postID string) (Post, error) {
 	config.Session.Refresh()
 	currentSession := config.Session.Copy()
 	defer currentSession.Close()
 
-	//this method protects the website from bots
-	xcode2, err := strconv.Atoi(r.FormValue("xcode2"))
+	post, err := OnePost(postID)
 	if err != nil {
-		log.Println(err)
+		return Post{}, errors.Wrap(err, "find a post to comment")
 	}
 
-	if xcode2 != 776 {
-		return Comment{}, Post{}, errors.New("400 bad request: you are a bot")
-	}
-
-	post, err := OnePost(idstr)
-	if err != nil {
-		return Comment{}, Post{}, errors.Wrap(err, "fail to find a post to comment")
-	}
-
-	if err := r.ParseForm(); err != nil {
-		return Comment{}, Post{}, errors.Wrap(err, "fail to parse a comment form")
-	}
-
-	comment := Comment{
-		ID:          bson.NewObjectId(),
-		PostID:      bson.ObjectIdHex(idstr),
-		CreatedAt:   time.Now().Format("02.01.2006 15:04:05"),
-		ApprovedFlg: 0,
-	}
-
-	err = decoder.Decode(&comment, r.PostForm)
-	if err != nil {
-		return Comment{}, Post{}, errors.Wrap(err, "fail to decode form into a struct")
-	}
-
-	// validate form values
-	if comment.Email == "" || comment.Author == "" || comment.Content == "" {
-		return Comment{},  Post{}, errors.New("400 bad request: all fields must be complete")
-	}
+	comment.ID = bson.NewObjectId()
+	comment.PostID = bson.ObjectIdHex(postID)
+	comment.CreatedAt = time.Now().Format(time.RFC3339)
 
 	// insert values to a database
 	err = config.Comments.Insert(comment)
 	if err != nil {
-		return Comment{},  Post{}, errors.Wrap(err, "Database error: fail to insert a comment")
+		return Post{}, errors.Wrap(err, "insert a comment into comments collections")
 	}
 
 	//update a post
@@ -84,8 +52,8 @@ func CreateComment(r *http.Request, idstr string) (Comment, Post, error) {
 
 	err = config.Posts.Update(bson.M{"_id": post.ID}, &post)
 	if err != nil {
-		return Comment{}, Post{}, errors.Wrap(err, "Database error: fail to update a post with a new comment")
+		return Post{}, errors.Wrapf(err, "update a post [%s] with a new comment", post.IDstr)
 	}
 
-	return comment, post, nil
+	return post, nil
 }

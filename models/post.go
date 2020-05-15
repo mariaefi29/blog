@@ -2,12 +2,9 @@ package models
 
 import (
 	"github.com/globalsign/mgo/bson"
-	"github.com/gorilla/schema"
 	"github.com/mariaefi29/blog/config"
 	"github.com/pkg/errors"
 )
-
-var decoder = schema.NewDecoder()
 
 //Post Struct
 type Post struct {
@@ -46,7 +43,7 @@ func AllPosts() ([]Post, error) {
 
 	posts := make([]Post, 0)
 	if err := config.Posts.Find(bson.M{}).All(&posts); err != nil {
-		return nil, errors.Wrap(err, "Database error: AllPosts")
+		return nil, errors.Wrap(err, "find all posts")
 	}
 
 	reverse(posts)
@@ -62,7 +59,7 @@ func OnePost(postIDstr string) (Post, error) {
 
 	post := Post{}
 	if err := config.Posts.Find(bson.M{"idstr": postIDstr}).One(&post); err != nil {
-		return post, errors.Wrap(err, "Database error: OnePost")
+		return post, errors.Wrapf(err, "find one post [%s]", postIDstr)
 	}
 
 	return post, nil
@@ -76,7 +73,7 @@ func PostsByCategory(categoryEng string) ([]Post, error) {
 
 	posts := []Post{}
 	if err := config.Posts.Find(bson.M{"categoryeng": categoryEng}).All(&posts); err != nil {
-		return nil, errors.Wrap(err, "Database error: PostsByCategory")
+		return nil, errors.Wrapf(err, "find posts by category [%s]", categoryEng)
 	}
 
 	reverse(posts)
@@ -94,21 +91,8 @@ func PostLike(post Post) (int, error) {
 	post.Likes++
 
 	if err := config.Posts.Update(bson.M{"_id": post.ID}, &post); err != nil {
-		return 0, errors.Wrap(err, "Database error: PostLike")
+		return 0, errors.Wrapf(err, "update post [%s] with like", post.IDstr)
 	}
 
 	return newLike, nil
-}
-
-//DeletePost deletes a post from a database
-func DeletePost(postID string) error {
-	config.Session.Refresh()
-	currentSession := config.Session.Copy()
-	defer currentSession.Close()
-
-	if err := config.Posts.Remove(bson.M{"_id": bson.ObjectIdHex(postID)}); err != nil {
-		return errors.Wrap(err, "Database error: DeletePost")
-	}
-
-	return nil
 }

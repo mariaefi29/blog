@@ -35,19 +35,14 @@ func init() {
 	//smtp server credentials
 	SMTPEmail = os.Getenv("SMTP_EMAIL")
 	SMTPPassword = os.Getenv("SMTP_PASSWORD")
-
 	ReCaptchaSecretCode = os.Getenv("RECAPTCHA_SECRET")
-
-	// get a mongo sessions
-	//DB_CONNECTION_STRING = mongodb://localhost/blog (env variable)
-	var err error
-
 	DbConnectionString := os.Getenv("DB_CONNECTION_STRING")
-
 	if DbConnectionString == "" {
 		log.Println("env variable DB_CONNECTION_STRING is not defined")
+		return
 	}
 
+	var err error
 	Session, err = mgo.Dial(DbConnectionString)
 	if err != nil {
 		log.Fatal("cannot dial mongo:", err)
@@ -60,7 +55,6 @@ func init() {
 	mgo.SetStats(true)
 
 	DB = Session.DB("blog")
-	// fmt.Println(DB)
 	Posts = DB.C("posts")
 	Comments = DB.C("comments")
 	Emails = DB.C("emails")
@@ -68,9 +62,9 @@ func init() {
 		Key:    []string{"email"},
 		Unique: true,
 	}
-	err1 := Emails.EnsureIndex(index)
+
+	err = Emails.EnsureIndex(index)
 	if err != nil {
-		log.Println("database error: cannot make an index on emails:", err1)
+		log.Println("database error: cannot make an index on emails:", err)
 	}
-	// fmt.Println("You connected to your mongo database.")
 }

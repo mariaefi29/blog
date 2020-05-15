@@ -9,6 +9,8 @@ import (
 	"text/template"
 
 	"github.com/globalsign/mgo"
+	"github.com/gorilla/schema"
+	"github.com/haisum/recaptcha"
 	"github.com/julienschmidt/httprouter"
 	"github.com/mariaefi29/blog/config"
 	"github.com/mariaefi29/blog/models"
@@ -16,23 +18,22 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+const (
+	ServerErrorMessage           = "Произошла ошибка сервера. Попробуйте ещё раз позже."
+	noShowFieldSubscribe         = 454
+	noShowFieldCommentAndMessage = 776
+)
+
+type dataToSend struct {
+	Message string `json:"message"`
+	NewLike int    `json:"likes"`
+}
+
 var tpl *template.Template
 
 var fm = template.FuncMap{
 	"truncate": truncate,
 	"incline":  commentIncline,
-}
-
-type message struct {
-	name    string
-	email   string
-	content string
-}
-
-var d = gomail.NewDialer("smtp.mail.ru", 465, config.SMTPEmail, config.SMTPPassword)
-
-func init() {
-	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*.gohtml"))
 }
 
 func truncate(s string) string {
@@ -61,63 +62,77 @@ func commentIncline(cnt int) string {
 	return s
 }
 
+type message struct {
+	name    string
+	email   string
+	content string
+}
+
+var d = gomail.NewDialer("smtp.mail.ru", 465, config.SMTPEmail, config.SMTPPassword)
+
+func init() {
+	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*.gohtml"))
+}
+
 func index(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	posts, err := models.AllPosts()
 	if err != nil {
-		http.Error(w, http.StatusText(500)+" "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.Wrap(err, "find all posts").Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := tpl.ExecuteTemplate(w, "index.gohtml", posts); err != nil {
-		log.Fatalln(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println(errors.Wrap(err, "execute template index"))
 	}
 }
 
 func show(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id := ps.ByName("id")
 	if id == "" {
-		http.Error(w, http.StatusText(400), http.StatusBadGateway)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	post, err := models.OnePost(id)
 	if err != nil {
-		http.Error(w, http.StatusText(500)+" "+err.Error(), http.StatusInternalServerError)
-		log.Println(err)
+		http.NotFound(w, r)
 		return
 	}
 
 	if err := tpl.ExecuteTemplate(w, "show.gohtml", post); err != nil {
-		log.Fatalln(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println(errors.Wrap(err, "execute template show"))
 	}
 }
 
-func about(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func about(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	if err := tpl.ExecuteTemplate(w, "about.gohtml", nil); err != nil {
-		log.Fatalln(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println(errors.Wrap(err, "execute template about"))
 	}
 }
 
-func contact(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func contact(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	if err := tpl.ExecuteTemplate(w, "contact.gohtml", nil); err != nil {
-		log.Fatalln(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println(errors.Wrap(err, "execute template contact"))
 	}
 }
 
 func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	if err := req.ParseForm(); err != nil {
-		log.Fatalln(err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
 	xcode3, err := strconv.Atoi(req.FormValue("xcode3"))
 	if err != nil {
-		log.Println(err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	if xcode3 != 776 {
-		http.Error(w, http.StatusText(400), http.StatusBadRequest)
-		log.Println("400 bad request: you are a bot")
+	if xcode3 != noShowFieldCommentAndMessage {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
@@ -127,100 +142,135 @@ func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 		content: req.FormValue("message"),
 	}
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", config.SMTPEmail)
-	m.SetHeader("To", "maria.efimenko29@gmail.com")
-	m.SetAddressHeader("reply-to", config.SMTPEmail, "Мария")
-	m.SetHeader("Subject", "Блог/контактная форма")
-	m.SetBody("text/html", fmt.Sprintf("<b>Сообщение</b>: %s \n <b>От</b>: %s, %s", msg.content, msg.email, msg.name))
-
-	if err := d.DialAndSend(m); err != nil {
-		log.Println(err)
-		fmt.Fprint(w, "Произошла ошибка сервера. Попробуйте ещё раз позже.")
+	messageToEmail := fmt.Sprintf("<b>Сообщение</b>: %s \n <b>От</b>: %s, %s", msg.content, msg.email, msg.name)
+	if err := sendMessageToEmail("Блог/контактная форма", messageToEmail); err != nil {
+		log.Println(errors.Wrap(err, "send new message to email"))
+		_, _ = fmt.Fprint(w, ServerErrorMessage)
 		return
 	}
 
-	fmt.Fprint(w, "Ваше сообщение успешно отправлено!")
+	_, _ = fmt.Fprint(w, "Ваше сообщение успешно отправлено!")
 }
 
 func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	email, err := models.CreateEmail(req)
+	email := models.Email{
+		EmailAddress: req.FormValue("email"),
+	}
+
+	noshow, err := strconv.Atoi(req.FormValue("noshow"))
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	if email.EmailAddress == "" {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	if noshow != noShowFieldSubscribe {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	re := recaptcha.R{
+		Secret: config.ReCaptchaSecretCode,
+	}
+	recaptchaResp := req.FormValue("g-recaptcha-response")
+	if !re.VerifyResponse(recaptchaResp) {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	err = models.CreateEmail(email)
 	if err != nil && mgo.IsDup(errors.Cause(err)) {
-		fmt.Fprint(w, "Вы уже были подписаны на обновления блога!")
+		_, _ = fmt.Fprint(w, "Вы уже были подписаны на обновления блога!")
 		return
 	}
 	if err != nil {
 		log.Println(err)
-		fmt.Fprint(w, "Произошла ошибка сервера. Попробуйте еще раз позже.")
+		_, _ = fmt.Fprint(w, ServerErrorMessage)
 		return
 	}
-	m := gomail.NewMessage()
-	m.SetHeader("From", config.SMTPEmail)
-	m.SetHeader("To", "maria.efimenko29@gmail.com")
-	m.SetAddressHeader("reply-to", config.SMTPEmail, "Мария")
-	m.SetHeader("Subject", "Блог/новый подписчик")
-	m.SetBody("text/html", fmt.Sprintf("Поприветствуйте нового подписчика: %s.", email.EmailAddress))
 
-	if err := d.DialAndSend(m); err != nil {
-		log.Println(err)
+	messageToEmail := fmt.Sprintf("Поприветствуйте нового подписчика: %s.", email.EmailAddress)
+	if err := sendMessageToEmail("Блог/новый подписчик", messageToEmail); err != nil {
+		log.Println(errors.Wrap(err, "send new subscriber to email"))
 	}
-
-	fmt.Fprint(w, "Вы успешно подписаны на обновления блога!")
 }
 
-func category(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+func category(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 	category := ps.ByName("category")
 	if category == "" {
-		http.Error(w, http.StatusText(400), http.StatusBadGateway)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	posts, err := models.PostsByCategory(category)
 	if err != nil {
-		http.Error(w, http.StatusText(500)+" "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	if err := tpl.ExecuteTemplate(w, "category.gohtml", posts); err != nil {
-		log.Fatalln(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println(errors.Wrap(err, "execute template category"))
 	}
 }
 
 func comment(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 	id := ps.ByName("id")
 	if id == "" {
-		http.Error(w, http.StatusText(400), http.StatusBadGateway)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	comment, post, err := models.CreateComment(req, id)
+	xcode2, err := strconv.Atoi(req.FormValue("xcode2"))
 	if err != nil {
 		log.Println(err)
-		fmt.Fprint(w, "Произошла ошибка сервера. Попробуйте еще раз позже.")
+	}
+
+	if xcode2 != noShowFieldCommentAndMessage {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	s := `Ваш комментарий успешно записан и проходит модерацию!`
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", config.SMTPEmail)
-	m.SetHeader("To", "maria.efimenko29@gmail.com")
-	m.SetAddressHeader("reply-to", config.SMTPEmail, "Мария")
-	m.SetHeader("Subject", "Блог/новый комментарий")
-	m.SetBody("text/html", fmt.Sprintf("Пост <b>%s</b> был прокомментирован пользователем <b>%s</b>: %s.<br> Необходима модерация.", post.Name, comment.Author, comment.Content))
-
-	if err := d.DialAndSend(m); err != nil {
-		log.Println(err)
+	if err := req.ParseForm(); err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
 	}
-	fmt.Fprint(w, s)
+
+	comment := models.Comment{}
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	err = decoder.Decode(&comment, req.PostForm)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	// validate form values
+	if comment.Email == "" || comment.Author == "" || comment.Content == "" {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	post, err := models.CreateComment(comment, id)
+	if err != nil {
+		_, _ = fmt.Fprint(w, ServerErrorMessage)
+		log.Println(err)
+		return
+	}
+
+	_, _ = fmt.Fprint(w, "Ваш комментарий успешно записан и проходит модерацию!")
+
+	messageToEmail := constructMessageToEmail(post.Name, comment.Author, comment.Content)
+	if err := sendMessageToEmail("Блог/новый комментарий", messageToEmail); err != nil {
+		log.Println(errors.Wrap(err, "send comment to email"))
+	}
 }
 
 func like(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
-	type Data struct {
-		Message string `json:"message"`
-		NewLike int    `json:"likes"`
-	}
-
-	var sendData Data
 	id := ps.ByName("id")
 	if id == "" {
 		http.Error(w, http.StatusText(400), http.StatusBadRequest)
@@ -229,7 +279,7 @@ func like(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 
 	post, err := models.OnePost(id)
 	if err != nil {
-		log.Fatalln(err)
+		http.NotFound(w, req)
 	}
 
 	_, err = req.Cookie(ps.ByName("id"))
@@ -241,20 +291,46 @@ func like(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 
 		newLike, err := models.PostLike(post)
 		if err != nil {
-			http.Error(w, http.StatusText(500)+err.Error(), http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Println(err)
 			return
 		}
-		s := `Спасибо! Ваше мнение учтено!`
-		sendData.Message = s
-		sendData.NewLike = newLike
+
+		sendData := dataToSend{
+			Message: "Спасибо! Ваше мнение учтено!",
+			NewLike: newLike,
+		}
 		jsonSendData, _ := json.Marshal(sendData)
-		fmt.Fprint(w, string(jsonSendData))
+		_, _ = fmt.Fprint(w, string(jsonSendData))
 		return
 	}
-	s := `Ваше мнение уже было учтено! Спасибо!`
-	sendData.Message = s
-	sendData.NewLike = post.Likes
+
+	sendData := dataToSend{
+		Message: "Ваше мнение уже было учтено! Спасибо!",
+		NewLike: post.Likes,
+	}
+
 	jsonSendData, _ := json.Marshal(sendData)
-	fmt.Fprint(w, string(jsonSendData))
+	_, _ = fmt.Fprint(w, string(jsonSendData))
+}
+
+func sendMessageToEmail(subject, message string) error {
+	m := gomail.NewMessage()
+	m.SetHeader("From", config.SMTPEmail)
+	m.SetHeader("To", "maria.efimenko29@gmail.com")
+	m.SetAddressHeader("reply-to", config.SMTPEmail, "Мария")
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", message)
+	if err := d.DialAndSend(m); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func constructMessageToEmail(name, author, content string) string {
+	return fmt.Sprintf(
+		"Пост <b>%s</b> был прокомментирован пользователем <b>%s</b>: %s.<br> Необходима модерация.",
+		name, author, content,
+	)
 }

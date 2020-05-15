@@ -1,0 +1,18 @@
+# github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
+github.com/globalsign/mgo
+github.com/globalsign/mgo/bson
+github.com/globalsign/mgo/internal/json
+github.com/globalsign/mgo/internal/sasl
+github.com/globalsign/mgo/internal/scram
+# github.com/gorilla/schema v1.1.0
+github.com/gorilla/schema
+# github.com/haisum/recaptcha v0.0.0-20170327142240-7d3b8053900e
+github.com/haisum/recaptcha
+# github.com/julienschmidt/httprouter v1.3.0
+github.com/julienschmidt/httprouter
+# github.com/pkg/errors v0.9.1
+github.com/pkg/errors
+# gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
+gopkg.in/alexcesaro/quotedprintable.v3
+# gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+gopkg.in/gomail.v2

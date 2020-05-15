@@ -2,7 +2,7 @@ config/credentials.go
 
 # mac hidden files
 .DS_Store
-
+.idea/
 
 *.exe
 
@@ -13,3 +13,8 @@ app.yaml
 # my images
 
 /public/img
+
+# dockerfiles for now
+
+Dockerfile
+.dockerignore
