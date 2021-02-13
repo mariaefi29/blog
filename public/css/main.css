@@ -422,7 +422,7 @@ input[type=submit]:hover, #load-more-btn:hover {
 
 .contact-form > input[type=submit], .comment-form > input[type=submit] {
   width: 9rem;
-  height: 100%;
+  height: 2.5rem;
   margin-top: 0.5rem;
   padding: 0.8rem;
 }
