@@ -1,43 +1,21 @@
-package main
+package server
 
 import (
 	"context"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/go-chi/chi/v5"
 	"github.com/mariaefi29/blog/config"
 	"github.com/mariaefi29/blog/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var ts *httptest.Server
-var router *httprouter.Router
-
-func TestMain(m *testing.M) {
-	setUp()
-	code := m.Run()
-	os.Exit(code)
-}
-
-func setUp() {
-	router = httprouter.New()
-	router.GET("/", index)
-	router.POST("/subscribe", subscribe)
-	router.GET("/posts/show/:id", show)
-	router.POST("/posts/show/:id", like)
-	router.POST("/posts/show/:id/comments", comment)
-	router.GET("/about", about)
-	router.GET("/category/:category", category)
-	router.GET("/contact", contact)
-	router.POST("/contact", sendMessage)
-	ts = httptest.NewServer(router)
-	defer ts.Close()
-}
+const testBaseURL = "http://example.com"
 
 func requireTestDB(t *testing.T) {
 	t.Helper()
@@ -46,15 +24,22 @@ func requireTestDB(t *testing.T) {
 	}
 }
 
+func withURLParam(req *http.Request, key, value string) *http.Request {
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add(key, value)
+
+	return req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+}
+
 // TestIndex is the simplest test: check base (/) URL
 func TestIndex(t *testing.T) {
 	t.Parallel()
 	requireTestDB(t)
 
 	writer := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", ts.URL+"/", nil)
+	req := httptest.NewRequest("GET", testBaseURL+"/", nil)
 
-	index(writer, req, nil)
+	index(writer, req)
 
 	if writer.Code != 200 {
 		t.Errorf("Response code is %v", writer.Code)
@@ -77,12 +62,10 @@ func TestShow(t *testing.T) {
 	//constracts requests for each id and checks if they are successful
 	for i := range allPosts {
 		writer := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", ts.URL+"/posts/show/"+allPosts[i].IDstr, nil)
+		req := httptest.NewRequest("GET", testBaseURL+"/posts/show/"+allPosts[i].IDstr, nil)
+		req = withURLParam(req, "id", allPosts[i].IDstr)
 
-		ps1 := httprouter.Param{Key: "id", Value: allPosts[i].IDstr}
-		ps := []httprouter.Param{ps1}
-
-		show(writer, req, ps)
+		show(writer, req)
 
 		if writer.Code != 200 {
 			t.Errorf("Response code is %v", writer.Code)
@@ -106,12 +89,10 @@ func TestLike(t *testing.T) {
 	//contracts requests for each id and checks if they are successful
 	for i := range allPosts {
 		writer := httptest.NewRecorder()
-		req := httptest.NewRequest("POST", ts.URL+"/posts/show/"+allPosts[i].IDstr, nil)
+		req := httptest.NewRequest("POST", testBaseURL+"/posts/show/"+allPosts[i].IDstr, nil)
+		req = withURLParam(req, "id", allPosts[i].IDstr)
 
-		ps1 := httprouter.Param{Key: "id", Value: allPosts[i].IDstr}
-		ps := []httprouter.Param{ps1}
-
-		like(writer, req, ps)
+		like(writer, req)
 
 		if writer.Code != 200 {
 			t.Errorf("Response code is %v", writer.Code)
@@ -139,9 +120,9 @@ func TestLike(t *testing.T) {
 func TestAbout(t *testing.T) {
 	t.Parallel()
 	writer := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", ts.URL+"/about", nil)
+	req := httptest.NewRequest("GET", testBaseURL+"/about", nil)
 
-	about(writer, req, nil)
+	about(writer, req)
 
 	if writer.Code != 200 {
 		t.Errorf("Response code is %v", writer.Code)
@@ -152,9 +133,9 @@ func TestAbout(t *testing.T) {
 func TestContact(t *testing.T) {
 	t.Parallel()
 	writer := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", ts.URL+"/contact", nil)
+	req := httptest.NewRequest("GET", testBaseURL+"/contact", nil)
 
-	about(writer, req, nil)
+	contact(writer, req)
 
 	if writer.Code != 200 {
 		t.Errorf("Response code is %v", writer.Code)
@@ -181,11 +162,10 @@ func TestCategory(t *testing.T) {
 	for i, v := range categories {
 		categoryMap[v], _ = config.Posts.CountDocuments(ctx, bson.M{"categoryeng": v})
 		writer := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", ts.URL+"/category/"+categories[i], nil)
-		ps1 := httprouter.Param{Key: "category", Value: categories[i]}
-		ps := []httprouter.Param{ps1}
+		req := httptest.NewRequest("GET", testBaseURL+"/category/"+categories[i], nil)
+		req = withURLParam(req, "category", categories[i])
 
-		category(writer, req, ps)
+		category(writer, req)
 
 		if writer.Code != 200 {
 			t.Errorf("Response code is %v", writer.Code)
@@ -224,13 +204,12 @@ func TestComment(t *testing.T) {
 		testComment := strings.NewReader(form.Encode())
 
 		writer := httptest.NewRecorder()
-		ps1 := httprouter.Param{Key: "id", Value: allPosts[i].IDstr}
-		ps := []httprouter.Param{ps1}
 
-		req := httptest.NewRequest("POST", ts.URL+"/posts/show/"+allPosts[i].IDstr+"/comments", testComment)
+		req := httptest.NewRequest("POST", testBaseURL+"/posts/show/"+allPosts[i].IDstr+"/comments", testComment)
+		req = withURLParam(req, "id", allPosts[i].IDstr)
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-		comment(writer, req, ps)
+		comment(writer, req)
 
 		if writer.Code != 200 {
 			t.Errorf("Response code is %v", writer.Code)
@@ -269,10 +248,10 @@ func TestSubscribe(t *testing.T) {
 	form.Add("noshow", "454")
 
 	//subscribe by a test email
-	req := httptest.NewRequest("POST", ts.URL+"/subscribe", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest("POST", testBaseURL+"/subscribe", strings.NewReader(form.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	subscribe(writer, req, nil)
+	subscribe(writer, req)
 
 	if writer.Code != 200 {
 		t.Errorf("Response code is %v", writer.Code)
@@ -290,10 +269,10 @@ func TestSubscribe(t *testing.T) {
 	form2.Add("noshow", "454")
 	//subscribe by an existed email
 
-	req2 := httptest.NewRequest("POST", ts.URL+"/subscribe", strings.NewReader(form2.Encode()))
+	req2 := httptest.NewRequest("POST", testBaseURL+"/subscribe", strings.NewReader(form2.Encode()))
 	req2.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	subscribe(writer2, req2, nil)
+	subscribe(writer2, req2)
 
 	resp2 := writer2.Result()
 	body2, _ := ioutil.ReadAll(resp2.Body)

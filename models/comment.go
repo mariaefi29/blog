@@ -2,10 +2,10 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/mariaefi29/blog/config"
-	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -27,7 +27,7 @@ func CreateComment(comment Comment, postID string) (Post, error) {
 
 	post, err := OnePost(postID)
 	if err != nil {
-		return Post{}, errors.Wrap(err, "find a post to comment")
+		return Post{}, fmt.Errorf("find a post to comment: %w", err)
 	}
 
 	comment.ID = bson.NewObjectID()
@@ -36,7 +36,7 @@ func CreateComment(comment Comment, postID string) (Post, error) {
 
 	// insert values to a database
 	if _, err := config.Comments.InsertOne(ctx, comment); err != nil {
-		return Post{}, errors.Wrap(err, "insert a comment into comments collections")
+		return Post{}, fmt.Errorf("insert a comment into comments collections: %w", err)
 	}
 
 	//update a post
@@ -50,10 +50,10 @@ func CreateComment(comment Comment, postID string) (Post, error) {
 
 	result, err := config.Posts.ReplaceOne(ctx, bson.M{"_id": post.ID}, &post)
 	if err != nil {
-		return Post{}, errors.Wrapf(err, "update a post [%s] with a new comment", post.IDstr)
+		return Post{}, fmt.Errorf("update a post [%s] with a new comment: %w", post.IDstr, err)
 	}
 	if result.MatchedCount == 0 {
-		return Post{}, errors.Errorf("update a post [%s] with a new comment: no matching post", post.IDstr)
+		return Post{}, fmt.Errorf("update a post [%s] with a new comment: no matching post", post.IDstr)
 	}
 
 	return post, nil
