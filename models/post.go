@@ -2,9 +2,9 @@ package models
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mariaefi29/blog/config"
-	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -44,10 +44,10 @@ func AllPosts() ([]Post, error) {
 	posts := make([]Post, 0)
 	cursor, err := config.Posts.Find(ctx, bson.M{})
 	if err != nil {
-		return nil, errors.Wrap(err, "find all posts")
+		return nil, fmt.Errorf("find all posts: %w", err)
 	}
 	if err := cursor.All(ctx, &posts); err != nil {
-		return nil, errors.Wrap(err, "find all posts")
+		return nil, fmt.Errorf("find all posts: %w", err)
 	}
 
 	reverse(posts)
@@ -61,7 +61,7 @@ func OnePost(postIDstr string) (Post, error) {
 
 	post := Post{}
 	if err := config.Posts.FindOne(ctx, bson.M{"idstr": postIDstr}).Decode(&post); err != nil {
-		return post, errors.Wrapf(err, "find one post [%s]", postIDstr)
+		return post, fmt.Errorf("find one post [%s]: %w", postIDstr, err)
 	}
 
 	return post, nil
@@ -74,10 +74,10 @@ func PostsByCategory(categoryEng string) ([]Post, error) {
 	posts := []Post{}
 	cursor, err := config.Posts.Find(ctx, bson.M{"categoryeng": categoryEng})
 	if err != nil {
-		return nil, errors.Wrapf(err, "find posts by category [%s]", categoryEng)
+		return nil, fmt.Errorf("find posts by category [%s]: %w", categoryEng, err)
 	}
 	if err := cursor.All(ctx, &posts); err != nil {
-		return nil, errors.Wrapf(err, "find posts by category [%s]", categoryEng)
+		return nil, fmt.Errorf("find posts by category [%s]: %w", categoryEng, err)
 	}
 
 	reverse(posts)
@@ -94,10 +94,10 @@ func PostLike(post Post) (int, error) {
 
 	result, err := config.Posts.ReplaceOne(ctx, bson.M{"_id": post.ID}, &post)
 	if err != nil {
-		return 0, errors.Wrapf(err, "update post [%s] with like", post.IDstr)
+		return 0, fmt.Errorf("update post [%s] with like: %w", post.IDstr, err)
 	}
 	if result.MatchedCount == 0 {
-		return 0, errors.Errorf("update post [%s] with like: no matching post", post.IDstr)
+		return 0, fmt.Errorf("update post [%s] with like: no matching post", post.IDstr)
 	}
 
 	return newLike, nil

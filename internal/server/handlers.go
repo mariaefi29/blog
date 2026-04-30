@@ -1,19 +1,21 @@
-package main
+package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"text/template"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
 	"github.com/haisum/recaptcha"
-	"github.com/julienschmidt/httprouter"
 	"github.com/mariaefi29/blog/config"
 	"github.com/mariaefi29/blog/models"
-	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"gopkg.in/gomail.v2"
 )
@@ -71,24 +73,60 @@ type message struct {
 var d = gomail.NewDialer("smtp.mail.ru", 465, config.SMTPEmail, config.SMTPPassword)
 
 func init() {
-	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*.gohtml"))
+	tpl = template.Must(parseTemplates("templates/*.gohtml"))
 }
 
-func index(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func parseTemplates(pattern string) (*template.Template, error) {
+	for _, candidate := range templatePatterns(pattern) {
+		matches, err := filepath.Glob(candidate)
+		if err != nil {
+			return nil, err
+		}
+		if len(matches) == 0 {
+			continue
+		}
+
+		return template.New("").Funcs(fm).ParseGlob(candidate)
+	}
+
+	return template.New("").Funcs(fm).ParseGlob(pattern)
+}
+
+func templatePatterns(pattern string) []string {
+	patterns := []string{pattern}
+
+	if _, filename, _, ok := runtime.Caller(0); ok {
+		patterns = append(patterns, filepath.Join(filepath.Dir(filename), "..", "..", pattern))
+	}
+
+	return patterns
+}
+
+func renderTemplate(w http.ResponseWriter, name string, data any) error {
+	var buf bytes.Buffer
+	if err := tpl.ExecuteTemplate(&buf, name, data); err != nil {
+		return err
+	}
+
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+func index(w http.ResponseWriter, req *http.Request) {
 	posts, err := models.AllPosts()
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "find all posts").Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Errorf("find all posts: %w", err).Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := tpl.ExecuteTemplate(w, "index.gohtml", posts); err != nil {
+	if err := renderTemplate(w, "index.gohtml", posts); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Println(errors.Wrap(err, "execute template index"))
+		log.Println(fmt.Errorf("execute template index: %w", err))
 	}
 }
 
-func show(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	id := ps.ByName("id")
+func show(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
@@ -100,27 +138,27 @@ func show(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	if err := tpl.ExecuteTemplate(w, "show.gohtml", post); err != nil {
+	if err := renderTemplate(w, "show.gohtml", post); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Println(errors.Wrap(err, "execute template show"))
+		log.Println(fmt.Errorf("execute template show: %w", err))
 	}
 }
 
-func about(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
-	if err := tpl.ExecuteTemplate(w, "about.gohtml", nil); err != nil {
+func about(w http.ResponseWriter, _ *http.Request) {
+	if err := renderTemplate(w, "about.gohtml", nil); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Println(errors.Wrap(err, "execute template about"))
+		log.Println(fmt.Errorf("execute template about: %w", err))
 	}
 }
 
-func contact(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
-	if err := tpl.ExecuteTemplate(w, "contact.gohtml", nil); err != nil {
+func contact(w http.ResponseWriter, _ *http.Request) {
+	if err := renderTemplate(w, "contact.gohtml", nil); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Println(errors.Wrap(err, "execute template contact"))
+		log.Println(fmt.Errorf("execute template contact: %w", err))
 	}
 }
 
-func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func sendMessage(w http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
@@ -144,7 +182,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 
 	messageToEmail := fmt.Sprintf("<b>Сообщение</b>: %s \n <b>От</b>: %s, %s", msg.content, msg.email, msg.name)
 	if err := sendMessageToEmail("Блог/контактная форма", messageToEmail); err != nil {
-		log.Println(errors.Wrap(err, "send new message to email"))
+		log.Println(fmt.Errorf("send new message to email: %w", err))
 		_, _ = fmt.Fprint(w, ServerErrorMessage)
 		return
 	}
@@ -152,7 +190,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 	_, _ = fmt.Fprint(w, "Ваше сообщение успешно отправлено!")
 }
 
-func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func subscribe(w http.ResponseWriter, req *http.Request) {
 	email := models.Email{
 		EmailAddress: req.FormValue("email"),
 	}
@@ -183,7 +221,7 @@ func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	}
 
 	err = models.CreateEmail(email)
-	if err != nil && mongo.IsDuplicateKeyError(errors.Cause(err)) {
+	if err != nil && mongo.IsDuplicateKeyError(err) {
 		_, _ = fmt.Fprint(w, "Вы уже были подписаны на обновления блога!")
 		return
 	}
@@ -197,12 +235,12 @@ func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 
 	messageToEmail := fmt.Sprintf("Поприветствуйте нового подписчика: %s.", email.EmailAddress)
 	if err := sendMessageToEmail("Блог/новый подписчик", messageToEmail); err != nil {
-		log.Println(errors.Wrap(err, "send new subscriber to email"))
+		log.Println(fmt.Errorf("send new subscriber to email: %w", err))
 	}
 }
 
-func category(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
-	category := ps.ByName("category")
+func category(w http.ResponseWriter, r *http.Request) {
+	category := chi.URLParam(r, "category")
 	if category == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
@@ -214,14 +252,14 @@ func category(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	if err := tpl.ExecuteTemplate(w, "category.gohtml", posts); err != nil {
+	if err := renderTemplate(w, "category.gohtml", posts); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Println(errors.Wrap(err, "execute template category"))
+		log.Println(fmt.Errorf("execute template category: %w", err))
 	}
 }
 
-func comment(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
-	id := ps.ByName("id")
+func comment(w http.ResponseWriter, req *http.Request) {
+	id := chi.URLParam(req, "id")
 	if id == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
@@ -268,12 +306,12 @@ func comment(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 
 	messageToEmail := constructMessageToEmail(post.Name, comment.Author, comment.Content)
 	if err := sendMessageToEmail("Блог/новый комментарий", messageToEmail); err != nil {
-		log.Println(errors.Wrap(err, "send comment to email"))
+		log.Println(fmt.Errorf("send comment to email: %w", err))
 	}
 }
 
-func like(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
-	id := ps.ByName("id")
+func like(w http.ResponseWriter, req *http.Request) {
+	id := chi.URLParam(req, "id")
 	if id == "" {
 		http.Error(w, http.StatusText(400), http.StatusBadRequest)
 		return
@@ -284,10 +322,10 @@ func like(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 		http.NotFound(w, req)
 	}
 
-	_, err = req.Cookie(ps.ByName("id"))
+	_, err = req.Cookie(id)
 	if err != nil {
 		http.SetCookie(w, &http.Cookie{
-			Name:  ps.ByName("id"),
+			Name:  id,
 			Value: "1",
 		})
 
