@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/mariaefi29/blog/config"
 	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/mariaefi29/blog/config"
 )
 
 func main() {
-	defer config.Session.Close()
+	defer config.Disconnect()
 	router := httprouter.New()
 	router.GET("/", index)
 	router.POST("/subscribe", subscribe)

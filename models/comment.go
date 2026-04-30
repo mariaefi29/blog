@@ -1,17 +1,18 @@
 package models
 
 import (
+	"context"
 	"time"
 
-	"github.com/globalsign/mgo/bson"
 	"github.com/mariaefi29/blog/config"
 	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-//Comment Struct
+// Comment Struct
 type Comment struct {
-	ID          bson.ObjectId `json:"id" bson:"_id"`
-	PostID      bson.ObjectId `json:"post_id" bson:"post_id"`
+	ID          bson.ObjectID `json:"id" bson:"_id"`
+	PostID      bson.ObjectID `json:"post_id" bson:"post_id"`
 	Content     string        `json:"content" bson:"content" schema:"message"`
 	Author      string        `json:"author" bson:"author" schema:"username"`
 	Email       string        `json:"email" bson:"email" schema:"email"`
@@ -20,24 +21,21 @@ type Comment struct {
 	ApprovedFlg int           `json:"approved_flg" bson:"approved_flg"` //pending or approved. Pending by default.
 }
 
-//CreateComment puts a comment to a post into a database
+// CreateComment puts a comment to a post into a database
 func CreateComment(comment Comment, postID string) (Post, error) {
-	config.Session.Refresh()
-	currentSession := config.Session.Copy()
-	defer currentSession.Close()
+	ctx := context.Background()
 
 	post, err := OnePost(postID)
 	if err != nil {
 		return Post{}, errors.Wrap(err, "find a post to comment")
 	}
 
-	comment.ID = bson.NewObjectId()
-	comment.PostID = bson.ObjectIdHex(postID)
+	comment.ID = bson.NewObjectID()
+	comment.PostID = post.ID
 	comment.CreatedAt = time.Now().Format(time.RFC3339)
 
 	// insert values to a database
-	err = config.Comments.Insert(comment)
-	if err != nil {
+	if _, err := config.Comments.InsertOne(ctx, comment); err != nil {
 		return Post{}, errors.Wrap(err, "insert a comment into comments collections")
 	}
 
@@ -50,9 +48,12 @@ func CreateComment(comment Comment, postID string) (Post, error) {
 		}
 	}
 
-	err = config.Posts.Update(bson.M{"_id": post.ID}, &post)
+	result, err := config.Posts.ReplaceOne(ctx, bson.M{"_id": post.ID}, &post)
 	if err != nil {
 		return Post{}, errors.Wrapf(err, "update a post [%s] with a new comment", post.IDstr)
+	}
+	if result.MatchedCount == 0 {
+		return Post{}, errors.Errorf("update a post [%s] with a new comment: no matching post", post.IDstr)
 	}
 
 	return post, nil

@@ -1,10 +1,13 @@
 package config
 
 import (
+	"context"
 	"log"
 	"os"
 
-	"github.com/globalsign/mgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var (
@@ -17,19 +20,19 @@ var (
 )
 
 // DB instance of MongoDB
-var DB *mgo.Database
+var DB *mongo.Database
 
 // Posts are posts in a blog
-var Posts *mgo.Collection
+var Posts *mongo.Collection
 
 // Comments are comments to posts in a blog
-var Comments *mgo.Collection
+var Comments *mongo.Collection
 
 // Emails are subscription emails
-var Emails *mgo.Collection
+var Emails *mongo.Collection
 
-// Session is a mongo session
-var Session *mgo.Session
+// Client is a MongoDB client.
+var Client *mongo.Client
 
 func init() {
 	//smtp server credentials
@@ -42,29 +45,39 @@ func init() {
 		return
 	}
 
+	ctx := context.Background()
+
 	var err error
-	Session, err = mgo.Dial(DbConnectionString)
+	Client, err = mongo.Connect(options.Client().ApplyURI(DbConnectionString))
 	if err != nil {
-		log.Fatal("cannot dial mongo:", err)
+		log.Fatal("cannot connect to mongo:", err)
 	}
 
-	if err = Session.Ping(); err != nil {
+	if err = Client.Ping(ctx, nil); err != nil {
 		log.Fatal("cannot ping mongo:", err)
 	}
 
-	mgo.SetStats(true)
-
-	DB = Session.DB("blog")
-	Posts = DB.C("posts")
-	Comments = DB.C("comments")
-	Emails = DB.C("emails")
-	index := mgo.Index{
-		Key:    []string{"email"},
-		Unique: true,
+	DB = Client.Database("blog")
+	Posts = DB.Collection("posts")
+	Comments = DB.Collection("comments")
+	Emails = DB.Collection("emails")
+	index := mongo.IndexModel{
+		Keys:    bson.D{{Key: "email", Value: 1}},
+		Options: options.Index().SetUnique(true),
 	}
 
-	err = Emails.EnsureIndex(index)
+	_, err = Emails.Indexes().CreateOne(ctx, index)
 	if err != nil {
 		log.Println("database error: cannot make an index on emails:", err)
+	}
+}
+
+func Disconnect() {
+	if Client == nil {
+		return
+	}
+
+	if err := Client.Disconnect(context.Background()); err != nil {
+		log.Println("database error: cannot disconnect mongo:", err)
 	}
 }
