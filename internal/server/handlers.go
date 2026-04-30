@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
-	"runtime"
 	"strconv"
 	"text/template"
 
@@ -73,33 +71,7 @@ type message struct {
 var d = gomail.NewDialer("smtp.mail.ru", 465, config.SMTPEmail, config.SMTPPassword)
 
 func init() {
-	tpl = template.Must(parseTemplates("templates/*.gohtml"))
-}
-
-func parseTemplates(pattern string) (*template.Template, error) {
-	for _, candidate := range templatePatterns(pattern) {
-		matches, err := filepath.Glob(candidate)
-		if err != nil {
-			return nil, err
-		}
-		if len(matches) == 0 {
-			continue
-		}
-
-		return template.New("").Funcs(fm).ParseGlob(candidate)
-	}
-
-	return template.New("").Funcs(fm).ParseGlob(pattern)
-}
-
-func templatePatterns(pattern string) []string {
-	patterns := []string{pattern}
-
-	if _, filename, _, ok := runtime.Caller(0); ok {
-		patterns = append(patterns, filepath.Join(filepath.Dir(filename), "..", "..", pattern))
-	}
-
-	return patterns
+	tpl = template.Must(parseTemplates())
 }
 
 func renderTemplate(w http.ResponseWriter, name string, data any) error {
