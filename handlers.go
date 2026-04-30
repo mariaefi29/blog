@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"text/template"
 
-	"github.com/globalsign/mgo"
 	"github.com/gorilla/schema"
 	"github.com/haisum/recaptcha"
 	"github.com/julienschmidt/httprouter"
 	"github.com/mariaefi29/blog/config"
 	"github.com/mariaefi29/blog/models"
 	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"gopkg.in/gomail.v2"
 )
 
@@ -183,7 +183,7 @@ func subscribe(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	}
 
 	err = models.CreateEmail(email)
-	if err != nil && mgo.IsDup(errors.Cause(err)) {
+	if err != nil && mongo.IsDuplicateKeyError(errors.Cause(err)) {
 		_, _ = fmt.Fprint(w, "Вы уже были подписаны на обновления блога!")
 		return
 	}
