@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/mariaefi29/blog/config"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -15,6 +16,7 @@ type Post struct {
 	Name          string        `json:"name" bson:"name"`
 	Category      string        `json:"category" bson:"category"`
 	CategoryEng   string        `json:"categoryeng" bson:"categoryeng"`
+	CreatedAt     time.Time     `json:"created_at" bson:"created_at,omitempty"`
 	Date          string        `json:"date" bson:"date"`
 	Images        []string      `json:"images" bson:"images"`
 	Author        string        `json:"author" bson:"author"`

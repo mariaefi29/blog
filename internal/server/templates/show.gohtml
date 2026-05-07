@@ -12,10 +12,10 @@
   <section class = "posts">
      <article class = "post">
       <header class = "post-header">
-        <a href="/category/{{.CategoryEng}}"><h3 class = "topic-category">{{.Category}}</h3></a>
+        <a href="/category/{{.CategoryEng}}"><h3 class = "topic-category">{{categoryTitle .CategoryEng .Category}}</h3></a>
         <a href="/posts/show/{{.IDstr}}"><h2>{{.Name}}</h2></a>
         <hr class = "post-header-line">
-        <h3 class = "date">{{.Date}}</h3>
+        <h3 class = "date">{{postDate .CreatedAt .Date}}</h3>
       </header>
       {{range $i, $e := .Images}}
       {{if ne $e "skip"}}
@@ -56,7 +56,7 @@
 
       {{if ne .CommentCnt 0}}
 
-      <header class = "comment-header">Комментарии</header>
+      <header class = "comment-header">Comments</header>
 
       {{end}}
       <ol class = "comment-list">
@@ -76,22 +76,22 @@
       {{end}}
       </ol>
       <p class="form-field-flash" id="flash"></p>
-      <h2>Оставить комментарий:</h2>
+      <h2>Leave a comment:</h2>
       <form class="comment-form" action="/posts/show/{{.IDstr}}/comments" method="POST">
       <!-- <form class="comment-form" method="POST"> -->
       <textarea class = "message" name="message" rows="8" required></textarea>
-        <label for="username">Имя*</label>
+        <label for="username">Name*</label>
         <input class = "username" type="text" name="username" required><br>
 
         <label for="email">Email*</label>
         <input type="email" name="email" class = "email-field" required><br>
 
-        <label for="website">Веб сайт</label>
+        <label for="website">Website</label>
         <input type="text" name="website" class = "website-input"><br>
         <!-- hidden field protects the website from bots -->
         <input type="hidden" name="xcode2" id="r3d3" value="0">
 
-        <input class = "send-button" type="submit" name="" value="Отправить" required>
+        <input class = "send-button" type="submit" name="" value="Send" required>
       </form>
     </section>
   </section>

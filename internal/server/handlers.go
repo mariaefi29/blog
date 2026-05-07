@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"text/template"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
@@ -19,7 +20,7 @@ import (
 )
 
 const (
-	ServerErrorMessage           = "Произошла ошибка сервера. Попробуйте ещё раз позже."
+	ServerErrorMessage           = "A server error occurred. Please try again later."
 	noShowFieldSubscribe         = 454
 	noShowFieldCommentAndMessage = 776
 )
@@ -32,8 +33,10 @@ type dataToSend struct {
 var tpl *template.Template
 
 var fm = template.FuncMap{
-	"truncate": truncate,
-	"incline":  commentIncline,
+	"truncate":      truncate,
+	"incline":       commentIncline,
+	"categoryTitle": categoryTitle,
+	"postDate":      postDate,
 }
 
 func truncate(s string) string {
@@ -49,17 +52,34 @@ func truncate(s string) string {
 }
 
 func commentIncline(cnt int) string {
-	var s string
-
-	if (cnt == 1) || (cnt > 20 && cnt%10 == 1) {
-		s = "Комментарий"
-	} else if (cnt >= 2 && cnt <= 4) || (cnt > 20 && cnt%10 >= 2 && cnt%10 <= 4) {
-		s = "Комментария"
-	} else {
-		s = "Комментариев"
+	if cnt == 1 {
+		return "1 Comment"
 	}
-	s = strconv.Itoa(cnt) + " " + s
-	return s
+
+	return strconv.Itoa(cnt) + " Comments"
+}
+
+func categoryTitle(categoryEng, fallback string) string {
+	switch categoryEng {
+	case "family":
+		return "Family"
+	case "travel":
+		return "Adventures"
+	case "english":
+		return "Languages"
+	case "webdev":
+		return "Tech"
+	default:
+		return fallback
+	}
+}
+
+func postDate(createdAt time.Time, fallback string) string {
+	if createdAt.IsZero() {
+		return fallback
+	}
+
+	return createdAt.Format("January 2, 2006")
 }
 
 type message struct {
@@ -152,14 +172,14 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 		content: req.FormValue("message"),
 	}
 
-	messageToEmail := fmt.Sprintf("<b>Сообщение</b>: %s \n <b>От</b>: %s, %s", msg.content, msg.email, msg.name)
-	if err := sendMessageToEmail("Блог/контактная форма", messageToEmail); err != nil {
+	messageToEmail := fmt.Sprintf("<b>Message</b>: %s \n <b>From</b>: %s, %s", msg.content, msg.email, msg.name)
+	if err := sendMessageToEmail("Blog/contact form", messageToEmail); err != nil {
 		log.Println(fmt.Errorf("send new message to email: %w", err))
 		_, _ = fmt.Fprint(w, ServerErrorMessage)
 		return
 	}
 
-	_, _ = fmt.Fprint(w, "Ваше сообщение успешно отправлено!")
+	_, _ = fmt.Fprint(w, "Your message has been sent.")
 }
 
 func subscribe(w http.ResponseWriter, req *http.Request) {
@@ -194,7 +214,7 @@ func subscribe(w http.ResponseWriter, req *http.Request) {
 
 	err = models.CreateEmail(email)
 	if err != nil && mongo.IsDuplicateKeyError(err) {
-		_, _ = fmt.Fprint(w, "Вы уже были подписаны на обновления блога!")
+		_, _ = fmt.Fprint(w, "You are already subscribed to blog updates!")
 		return
 	}
 	if err != nil {
@@ -203,10 +223,10 @@ func subscribe(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, _ = fmt.Fprint(w, "Вы успешно подписаны на обновления блога!")
+	_, _ = fmt.Fprint(w, "You have successfully subscribed to blog updates!")
 
-	messageToEmail := fmt.Sprintf("Поприветствуйте нового подписчика: %s.", email.EmailAddress)
-	if err := sendMessageToEmail("Блог/новый подписчик", messageToEmail); err != nil {
+	messageToEmail := fmt.Sprintf("Please welcome a new subscriber: %s.", email.EmailAddress)
+	if err := sendMessageToEmail("Blog/new subscriber", messageToEmail); err != nil {
 		log.Println(fmt.Errorf("send new subscriber to email: %w", err))
 	}
 }
@@ -274,10 +294,10 @@ func comment(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, _ = fmt.Fprint(w, "Ваш комментарий успешно записан и проходит модерацию!")
+	_, _ = fmt.Fprint(w, "Your comment has been submitted and is awaiting moderation!")
 
 	messageToEmail := constructMessageToEmail(post.Name, comment.Author, comment.Content)
-	if err := sendMessageToEmail("Блог/новый комментарий", messageToEmail); err != nil {
+	if err := sendMessageToEmail("Blog/new comment", messageToEmail); err != nil {
 		log.Println(fmt.Errorf("send comment to email: %w", err))
 	}
 }
@@ -309,7 +329,7 @@ func like(w http.ResponseWriter, req *http.Request) {
 		}
 
 		sendData := dataToSend{
-			Message: "Спасибо! Ваше мнение учтено!",
+			Message: "Thanks! Glad you liked it",
 			NewLike: newLike,
 		}
 		jsonSendData, _ := json.Marshal(sendData)
@@ -318,7 +338,7 @@ func like(w http.ResponseWriter, req *http.Request) {
 	}
 
 	sendData := dataToSend{
-		Message: "Ваше мнение уже было учтено! Спасибо!",
+		Message: "You’ve already liked this post. Thanks!",
 		NewLike: post.Likes,
 	}
 
@@ -330,7 +350,7 @@ func sendMessageToEmail(subject, message string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", config.SMTPEmail)
 	m.SetHeader("To", "maria.efimenko29@gmail.com")
-	m.SetAddressHeader("reply-to", config.SMTPEmail, "Мария")
+	m.SetAddressHeader("reply-to", config.SMTPEmail, "Maria")
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", message)
 	if err := d.DialAndSend(m); err != nil {
@@ -342,7 +362,7 @@ func sendMessageToEmail(subject, message string) error {
 
 func constructMessageToEmail(name, author, content string) string {
 	return fmt.Sprintf(
-		"Пост <b>%s</b> был прокомментирован пользователем <b>%s</b>: %s.<br> Необходима модерация.",
+		"The post <b>%s</b> received a comment from <b>%s</b>: %s.<br> Moderation is required.",
 		name, author, content,
 	)
 }

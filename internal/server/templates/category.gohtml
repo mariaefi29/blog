@@ -15,20 +15,20 @@
 <div class="post-snippet">
   <img class = "post-photo" src="{{index .Images 0}}" alt="">
   <header class = "post-header category-margin">
-    <h3 class = "topic-category">{{.Category}}</h3>
+    <h3 class = "topic-category">{{categoryTitle .CategoryEng .Category}}</h3>
     <a href="/posts/show/{{.IDstr}}"><h2>{{.Name}}</h2></a>
     <hr class = "post-header-line margin-zero">
   </header>
   <div class = "content category-margin">
   {{index .Content 0 | truncate}}...
   </div>
-  <h3 class = "date category-date">{{.Date}}</h3>
+  <h3 class = "date category-date">{{postDate .CreatedAt .Date}}</h3>
 </div>
 {{end}}
 
 {{else}}
 
-<p class="no-posts">На данный момент посты в этой категории отсутствуют.</p>
+<p class="no-posts">There are no posts in this category yet.</p>
 
 {{end}}
 
@@ -39,7 +39,7 @@
   {{template "aside"}}
 
     <div class="popular-posts-box">
-      <h2>Популярные посты</h2>
+      <h2>Popular posts</h2>
       <hr class = "read-more-line">
 
       {{range .}}
