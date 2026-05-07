@@ -1,25 +1,25 @@
 {{define "aside"}}
 
-<section class = "about-me">
-<img src="/static/img/myphoto.JPG" alt="">
-<div class = "content">Всем привет! Меня зовут Мария Ефименко.
-  Я выпускница механико-математического факультета МГУ, Go разработчик в IT компании, жена и мама двоих детей.
-</div>
-  <a href="/about"><button class = "read-more">Читать далее</button></a>
-  <hr class = "read-more-line">
+  <section class = "about-me">
+    <img src="/static/img/myphoto.JPG" alt="">
+    <div class = "content">Hello everyone! My name is Maria Efimenko.
+      I'm an MSU math graduate, a Software Engineer at an IT company, and a mother of two boys.
+    </div>
+    <a href="/about"><button class = "read-more">Read more</button></a>
+    <hr class = "read-more-line">
   </section>
 
   <div class="sign-up-box">
-    <h2>Подписка</h2>
+    <h2>Subscription</h2>
     <hr class = "read-more-line">
-    <h3>Получайте уведомления о новых постах прямо на Вашу почту!</h3>
-  <form  class = "sing-up-form" action="/" method="post">
-    <input type="email" name="email" class = "email" placeholder="Email">
-    <div class="g-recaptcha" data-sitekey="6LcKavQUAAAAAG1pch276IT2nj2ulSvLF5RP8bhW" data-size="invisible"></div>
-    <!-- hidden field protects the website from bots -->
-    <input type="hidden" name="noshow" id="r0d0" value="0">
-    <input type="submit" name="" value="Подписаться">
-  </form>
+    <h3>Get notified about new posts directly in your inbox!</h3>
+    <form  class = "sing-up-form" action="/subscribe" method="post">
+      <input type="email" name="email" class = "email" placeholder="Email">
+      <div class="g-recaptcha" data-sitekey="6LcKavQUAAAAAG1pch276IT2nj2ulSvLF5RP8bhW" data-size="invisible"></div>
+      <!-- hidden field protects the website from bots -->
+      <input type="hidden" name="noshow" id="r0d0" value="0">
+      <input type="submit" name="" value="Subscribe">
+    </form>
   </div>
 
 {{end}}

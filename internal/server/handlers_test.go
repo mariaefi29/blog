@@ -231,8 +231,8 @@ func TestSubscribe(t *testing.T) {
 	t.Parallel()
 	requireTestDB(t)
 
-	success := "Вы успешно подписаны на обновления блога!"
-	fail := "Вы уже были подписаны на обновления блога!"
+	success := "You have successfully subscribed to blog updates!"
+	fail := "You are already subscribed to blog updates!"
 	writer := httptest.NewRecorder()
 	writer2 := httptest.NewRecorder()
 
@@ -290,4 +290,31 @@ func TestSubscribe(t *testing.T) {
 		t.Errorf("Database error is %v", err)
 	}
 
+}
+
+func TestPostDate(t *testing.T) {
+	testCases := map[string]struct {
+		createdAt time.Time
+		fallback  string
+		want      string
+	}{
+		"formats created at": {
+			createdAt: time.Date(2026, time.May, 4, 17, 30, 0, 0, time.UTC),
+			fallback:  "legacy date",
+			want:      "May 4, 2026",
+		},
+		"falls back to legacy date": {
+			createdAt: time.Time{},
+			fallback:  "legacy date",
+			want:      "legacy date",
+		},
+	}
+
+	for name, tt := range testCases {
+		t.Run(name, func(t *testing.T) {
+			if got := postDate(tt.createdAt, tt.fallback); got != tt.want {
+				t.Fatalf("postDate() = %q, want %q", got, tt.want)
+			}
+		})
+	}
 }
