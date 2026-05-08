@@ -5,6 +5,15 @@ body {
   grid-row-gap: 1rem;
 }
 
+.contact-body {
+  min-height: 100vh;
+  grid-template-rows: auto auto auto 1fr auto;
+}
+
+.contact-body .about-main {
+  align-self: start;
+}
+
 nav, .logo, footer, .abt-post-header, .profile-pages{
   grid-column: 1/-1;
 }
