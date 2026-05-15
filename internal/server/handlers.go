@@ -33,10 +33,15 @@ type dataToSend struct {
 var tpl *template.Template
 
 var fm = template.FuncMap{
-	"truncate":      truncate,
-	"incline":       commentIncline,
-	"categoryTitle": categoryTitle,
-	"postDate":      postDate,
+	"truncate":                     truncate,
+	"incline":                      commentIncline,
+	"categoryTitle":                categoryTitle,
+	"postDate":                     postDate,
+	"googleAnalyticsMeasurementID": googleAnalyticsMeasurementID,
+}
+
+func googleAnalyticsMeasurementID() string {
+	return config.GoogleAnalyticsMeasurementID
 }
 
 func truncate(s string) string {

@@ -17,6 +17,8 @@ var (
 	SMTPPassword string
 	//ReCaptchaSecretCode contains secret code for recaptcha validation
 	ReCaptchaSecretCode string
+	// GoogleAnalyticsMeasurementID contains the GA4 measurement ID.
+	GoogleAnalyticsMeasurementID string
 )
 
 // DB instance of MongoDB
@@ -39,6 +41,7 @@ func init() {
 	SMTPEmail = os.Getenv("SMTP_EMAIL")
 	SMTPPassword = os.Getenv("SMTP_PASSWORD")
 	ReCaptchaSecretCode = os.Getenv("RECAPTCHA_SECRET")
+	GoogleAnalyticsMeasurementID = os.Getenv("GOOGLE_ANALYTICS_MEASUREMENT_ID")
 	DbConnectionString := os.Getenv("DB_CONNECTION_STRING")
 	if DbConnectionString == "" {
 		log.Println("env variable DB_CONNECTION_STRING is not defined")
