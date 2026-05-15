@@ -3,15 +3,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-125320509-1"></script>
-  <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-125320509-1');
-  </script>
   <!-- reCAPTCHA -->
   <script src="https://www.google.com/recaptcha/api.js?render=explicit&onload=onScriptLoad" async defer></script>
 
@@ -35,6 +26,12 @@
   <link rel="stylesheet" href="/static/css/layout_1000_plus.css" media="(min-width: 1000px)">
   <link rel="stylesheet" href="/static/css/layout_1100_plus.css" media="(min-width: 1100px)">
 
+  {{with googleAnalyticsMeasurementID}}
+  <script>
+    window.blogGoogleAnalyticsId = "{{. | js}}";
+  </script>
+  <script src="/static/js/cookie-consent.js" defer></script>
+  {{end}}
 
   <link href="https://fonts.googleapis.com/css?family=Lora:400,700&amp;subset=cyrillic" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Marck+Script&amp;subset=cyrillic" rel="stylesheet">
