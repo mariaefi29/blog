@@ -251,7 +251,7 @@ func (s *server) comment(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	comment := store.Comment{}
+	var comment store.Comment
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
 	err = decoder.Decode(&comment, req.PostForm)

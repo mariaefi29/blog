@@ -13,7 +13,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/mariaefi29/blog/config"
 	"github.com/mariaefi29/blog/store"
-	"go.mongodb.org/mongo-driver/v2/bson"
 	"gopkg.in/gomail.v2"
 )
 
@@ -160,7 +159,7 @@ func TestLike(t *testing.T) {
 	t.Parallel()
 	db := requireTestStore(t)
 
-	updatedPost := store.Post{} //a modifed post after a post request
+	var updatedPost store.Post //a modifed post after a post request
 
 	//retrieves all posts from a database
 	allPosts, err := db.AllPosts(context.Background())
@@ -183,7 +182,8 @@ func TestLike(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		if err := db.Posts.FindOne(ctx, bson.M{"_id": allPosts[i].ID}).Decode(&updatedPost); err != nil {
+		updatedPost, err = db.FindPostByID(ctx, allPosts[i].ID)
+		if err != nil {
 			t.Errorf("Database error is %v", err)
 			continue
 		}
@@ -192,7 +192,7 @@ func TestLike(t *testing.T) {
 			t.Errorf("The likes number supposed to be %d, but got %d", allPosts[i].Likes+1, updatedPost.Likes)
 		} else {
 			//put an initial post back in the database before the post request happen
-			if _, err := db.Posts.ReplaceOne(ctx, bson.M{"_id": allPosts[i].ID}, &allPosts[i]); err != nil {
+			if err := db.ReplacePost(ctx, allPosts[i]); err != nil {
 				t.Errorf("Database error is %v", err)
 			}
 		}
@@ -234,11 +234,11 @@ func TestCategory(t *testing.T) {
 	t.Parallel()
 	db := requireTestStore(t)
 
-	categories := make([]string, 0)
 	//retrieves all distinct categories from a database
 	ctx := context.Background()
 
-	if err := db.Posts.Distinct(ctx, "categoryeng", bson.M{}).Decode(&categories); err != nil {
+	categories, err := db.DistinctCategories(ctx)
+	if err != nil {
 		t.Errorf("Database error is %v", err)
 	}
 
@@ -247,7 +247,7 @@ func TestCategory(t *testing.T) {
 
 	//contracts requests for each category and checks if there are working
 	for i, v := range categories {
-		categoryMap[v], _ = db.Posts.CountDocuments(ctx, bson.M{"categoryeng": v})
+		categoryMap[v], _ = db.CountPostsByCategory(ctx, v)
 		writer := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", testBaseURL+"/category/"+categories[i], nil)
 		req = withURLParam(req, "category", categories[i])
@@ -305,11 +305,11 @@ func TestComment(t *testing.T) {
 		} else {
 			ctx := context.Background()
 			//put an initial post back in the database without a test comment
-			if _, err := db.Posts.ReplaceOne(ctx, bson.M{"_id": allPosts[i].ID}, &allPosts[i]); err != nil {
+			if err := db.ReplacePost(ctx, allPosts[i]); err != nil {
 				t.Errorf("Database error is %v", err)
 			}
 
-			if _, err := db.Comments.DeleteOne(ctx, bson.M{"email": "test@gmail.com"}); err != nil {
+			if err := db.DeleteCommentByEmail(ctx, "test@gmail.com"); err != nil {
 				t.Errorf("cannot remove a test comment: database error is %v", err)
 			}
 		}
@@ -326,10 +326,10 @@ func TestSubscribe(t *testing.T) {
 	writer2 := httptest.NewRecorder()
 	srv := newTestServer(t, db)
 
-	result := store.Email{}
 	ctx := context.Background()
 
-	if err := db.Emails.FindOne(ctx, bson.M{}).Decode(&result); err != nil {
+	result, err := db.FirstEmail(ctx)
+	if err != nil {
 		t.Errorf("Database error is %v", err)
 	}
 
@@ -376,7 +376,7 @@ func TestSubscribe(t *testing.T) {
 		t.Errorf("Expected a fail message: %v, but got %v", fail, string(body2))
 	}
 
-	if _, err := db.Emails.DeleteOne(ctx, bson.M{"email": "test@gmail.com"}); err != nil {
+	if err := db.DeleteEmailByAddress(ctx, "test@gmail.com"); err != nil {
 		t.Errorf("Database error is %v", err)
 	}
 
