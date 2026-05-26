@@ -20,7 +20,7 @@
     <hr class = "post-header-line margin-zero">
   </header>
   <div class = "content category-margin">
-  {{index .Content 0 | truncate}}...
+  {{index .Content 0 | truncate | safeHTML}}...
   </div>
   <h3 class = "date category-date">{{postDate .CreatedAt .Date}}</h3>
 </div>

@@ -16,7 +16,7 @@ The application is running now at [http://www.marialife.com](https://www.mariali
 ## Building an application locally
 
 1. Make sure you have MongoDB database running either locally or remotely. [MongoDB installation process](https://docs.mongodb.com/manual/installation/)
-2. Create 3 collections in your db (named "blog"): posts, comments and emails. If you want to populate them (which is not necessary), you can check database schema in the package models.  
+2. Create 3 collections in your db (named "blog"): posts, comments and emails. If you want to populate them (which is not necessary), you can check database schema in the package store.
 3. Create an environmental variable DB_CONNECTION_STRING and assign it to an url of your MongoDB database. For example: mongodb://localhost/blog
 4. Create environmental variables SMTP_EMAIL and SMTP_PASSWORD and assign them to an SMTP server credentials. This step is needed for a contact form to work, but is not necessary for the application to run.
 5. To enable Google Analytics, create an environmental variable GOOGLE_ANALYTICS_MEASUREMENT_ID and assign it to your GA4 measurement ID, for example: G-XXXXXXXXXX. If it is not set, analytics and the analytics consent banner are disabled.
