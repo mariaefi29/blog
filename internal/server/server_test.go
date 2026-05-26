@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/mariaefi29/blog/config"
 	"github.com/mariaefi29/blog/store"
-	"go.mongodb.org/mongo-driver/v2/bson"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/gomail.v2"
 )
 
@@ -30,30 +30,18 @@ func TestNew(t *testing.T) {
 		},
 	})
 
-	if srv.Addr != ":8080" {
-		t.Fatalf("server address = %q, want %q", srv.Addr, ":8080")
-	}
-	if srv.ReadHeaderTimeout != timeout {
-		t.Fatalf("read header timeout = %s, want %s", srv.ReadHeaderTimeout, timeout)
-	}
-	if srv.ReadTimeout != 0 {
-		t.Fatalf("read timeout = %s, want 0", srv.ReadTimeout)
-	}
-	if srv.WriteTimeout != 0 {
-		t.Fatalf("write timeout = %s, want 0", srv.WriteTimeout)
-	}
-	if srv.IdleTimeout != 0 {
-		t.Fatalf("idle timeout = %s, want 0", srv.IdleTimeout)
-	}
+	require.Equal(t, ":8080", srv.Addr)
+	require.Equal(t, timeout, srv.ReadHeaderTimeout)
+	require.Zero(t, srv.ReadTimeout)
+	require.Zero(t, srv.WriteTimeout)
+	require.Zero(t, srv.IdleTimeout)
 
 	req := httptest.NewRequest(http.MethodGet, "/about", nil)
 	rec := httptest.NewRecorder()
 
 	srv.Handler.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("response code = %d, want %d", rec.Code, http.StatusOK)
-	}
+	require.Equal(t, http.StatusOK, rec.Code)
 }
 
 const testBaseURL = "http://example.com"
@@ -62,21 +50,15 @@ func requireTestStore(t *testing.T) *store.Store {
 	t.Helper()
 
 	cfg, err := config.Load()
-	if err != nil {
-		t.Fatalf("load config: %v", err)
-	}
+	require.NoError(t, err, "load config")
 	if cfg.Mongo.ConnectionString == "" {
 		t.Skip("DB_CONNECTION_STRING is not set")
 	}
 
 	db, err := store.New(context.Background(), cfg.Mongo.ConnectionString, cfg.Mongo.Database)
-	if err != nil {
-		t.Fatalf("connect test database: %v", err)
-	}
+	require.NoError(t, err, "connect test database")
 	t.Cleanup(func() {
-		if err := db.Disconnect(context.Background()); err != nil {
-			t.Errorf("disconnect test database: %v", err)
-		}
+		require.NoError(t, db.Disconnect(context.Background()), "disconnect test database")
 	})
 
 	return db
@@ -93,14 +75,10 @@ func newTestServer(t *testing.T, db *store.Store) *server {
 	t.Helper()
 
 	cfg, err := config.Load()
-	if err != nil {
-		t.Fatalf("load config: %v", err)
-	}
+	require.NoError(t, err, "load config")
 
 	tpl, err := parseTemplates(cfg.Analytics.GoogleAnalyticsMeasurementID)
-	if err != nil {
-		t.Fatalf("parse templates: %v", err)
-	}
+	require.NoError(t, err, "parse templates")
 
 	return &server{
 		templates: tpl,
@@ -121,10 +99,7 @@ func TestIndex(t *testing.T) {
 
 	srv.index(writer, req)
 
-	if writer.Code != 200 {
-		t.Errorf("Response code is %v", writer.Code)
-	}
-
+	require.Equal(t, http.StatusOK, writer.Code)
 }
 
 // TestShow: check (/posts/show/:id) URL
@@ -135,9 +110,7 @@ func TestShow(t *testing.T) {
 
 	//retrieves all posts from a database
 	allPosts, err := db.AllPosts(context.Background())
-	if err != nil {
-		t.Errorf("Database error is %v", err)
-	}
+	require.NoError(t, err, "database")
 
 	srv := newTestServer(t, db)
 
@@ -149,9 +122,7 @@ func TestShow(t *testing.T) {
 
 		srv.show(writer, req)
 
-		if writer.Code != 200 {
-			t.Errorf("Response code is %v", writer.Code)
-		}
+		require.Equal(t, http.StatusOK, writer.Code)
 	}
 }
 
@@ -160,42 +131,40 @@ func TestLike(t *testing.T) {
 	t.Parallel()
 	db := requireTestStore(t)
 
-	updatedPost := store.Post{} //a modifed post after a post request
+	var updatedPost store.Post //a modifed post after a post request
 
 	//retrieves all posts from a database
 	allPosts, err := db.AllPosts(context.Background())
-	if err != nil {
-		t.Errorf("Database error is %v", err)
-	}
+	require.NoError(t, err, "database")
 
 	srv := newTestServer(t, db)
 
 	//contracts requests for each id and checks if they are successful
 	for i := range allPosts {
+		ctx := context.Background()
+		restored := false
+		t.Cleanup(func() {
+			if !restored {
+				require.NoError(t, db.ReplacePost(ctx, allPosts[i]), "database")
+			}
+		})
+
 		writer := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", testBaseURL+"/posts/show/"+allPosts[i].IDstr, nil)
 		req = withURLParam(req, "id", allPosts[i].IDstr)
 
 		srv.like(writer, req)
 
-		if writer.Code != 200 {
-			t.Errorf("Response code is %v", writer.Code)
-		}
+		require.Equal(t, http.StatusOK, writer.Code)
 
-		ctx := context.Background()
-		if err := db.Posts.FindOne(ctx, bson.M{"_id": allPosts[i].ID}).Decode(&updatedPost); err != nil {
-			t.Errorf("Database error is %v", err)
-			continue
-		}
+		updatedPost, err = db.FindPostByID(ctx, allPosts[i].ID)
+		require.NoError(t, err, "database")
 		//check if the number of likes was added by one after a post request
-		if updatedPost.Likes != allPosts[i].Likes+1 {
-			t.Errorf("The likes number supposed to be %d, but got %d", allPosts[i].Likes+1, updatedPost.Likes)
-		} else {
-			//put an initial post back in the database before the post request happen
-			if _, err := db.Posts.ReplaceOne(ctx, bson.M{"_id": allPosts[i].ID}, &allPosts[i]); err != nil {
-				t.Errorf("Database error is %v", err)
-			}
-		}
+		require.Equal(t, allPosts[i].Likes+1, updatedPost.Likes)
+
+		//put an initial post back in the database before the post request happen
+		require.NoError(t, db.ReplacePost(ctx, allPosts[i]), "database")
+		restored = true
 
 	}
 }
@@ -209,9 +178,7 @@ func TestAbout(t *testing.T) {
 
 	srv.about(writer, req)
 
-	if writer.Code != 200 {
-		t.Errorf("Response code is %v", writer.Code)
-	}
+	require.Equal(t, http.StatusOK, writer.Code)
 }
 
 // TestContact: check get request to (/contact) URL
@@ -223,10 +190,7 @@ func TestContact(t *testing.T) {
 
 	srv.contact(writer, req)
 
-	if writer.Code != 200 {
-		t.Errorf("Response code is %v", writer.Code)
-	}
-
+	require.Equal(t, http.StatusOK, writer.Code)
 }
 
 // TestCategory: check get request to (/category/:category) URL
@@ -234,39 +198,36 @@ func TestCategory(t *testing.T) {
 	t.Parallel()
 	db := requireTestStore(t)
 
-	categories := make([]string, 0)
 	//retrieves all distinct categories from a database
 	ctx := context.Background()
 
-	if err := db.Posts.Distinct(ctx, "categoryeng", bson.M{}).Decode(&categories); err != nil {
-		t.Errorf("Database error is %v", err)
-	}
+	categories, err := db.DistinctCategories(ctx)
+	require.NoError(t, err, "database")
 
 	srv := newTestServer(t, db)
 	categoryMap := make(map[string]int64) //contains category and the amount of posts in it
 
 	//contracts requests for each category and checks if there are working
 	for i, v := range categories {
-		categoryMap[v], _ = db.Posts.CountDocuments(ctx, bson.M{"categoryeng": v})
+		categoryMap[v], err = db.CountPostsByCategory(ctx, v)
+		require.NoError(t, err, "database")
 		writer := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", testBaseURL+"/category/"+categories[i], nil)
 		req = withURLParam(req, "category", categories[i])
 
 		srv.category(writer, req)
 
-		if writer.Code != 200 {
-			t.Errorf("Response code is %v", writer.Code)
-		}
+		require.Equal(t, http.StatusOK, writer.Code)
 
 		resp := writer.Result()
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.NoError(t, resp.Body.Close())
 
 		num := strings.Count(string(body), `<div class="post-snippet">`) //number of posts displayed in the categoy
 
 		//checks if the number of posts were displayed on the page correctly
-		if categoryMap[v] != int64(num) {
-			t.Errorf("The number of posts in the category %v, was expected %v", num, categoryMap[v])
-		}
+		require.Equal(t, categoryMap[v], int64(num))
 	}
 }
 
@@ -276,13 +237,23 @@ func TestComment(t *testing.T) {
 
 	//retrieves all posts from a database
 	allPosts, err := db.AllPosts(context.Background())
-	if err != nil {
-		t.Errorf("Database error is %v", err)
-	}
+	require.NoError(t, err, "database")
 
 	srv := newTestServer(t, db)
 
 	for i := range allPosts {
+		ctx := context.Background()
+		restored := false
+		removedComment := false
+		t.Cleanup(func() {
+			if !restored {
+				require.NoError(t, db.ReplacePost(ctx, allPosts[i]), "database")
+			}
+			if !removedComment {
+				require.NoError(t, db.DeleteCommentByEmail(ctx, "test@gmail.com"), "remove test comment")
+			}
+		})
+
 		//contracts a test comment
 		form := url.Values{}
 		form.Add("message", "Test message")
@@ -300,19 +271,13 @@ func TestComment(t *testing.T) {
 
 		srv.comment(writer, req)
 
-		if writer.Code != 200 {
-			t.Errorf("Response code is %v", writer.Code)
-		} else {
-			ctx := context.Background()
-			//put an initial post back in the database without a test comment
-			if _, err := db.Posts.ReplaceOne(ctx, bson.M{"_id": allPosts[i].ID}, &allPosts[i]); err != nil {
-				t.Errorf("Database error is %v", err)
-			}
+		require.Equal(t, http.StatusOK, writer.Code)
 
-			if _, err := db.Comments.DeleteOne(ctx, bson.M{"email": "test@gmail.com"}); err != nil {
-				t.Errorf("cannot remove a test comment: database error is %v", err)
-			}
-		}
+		//put an initial post back in the database without a test comment
+		require.NoError(t, db.ReplacePost(ctx, allPosts[i]), "database")
+		restored = true
+		require.NoError(t, db.DeleteCommentByEmail(ctx, "test@gmail.com"), "remove test comment")
+		removedComment = true
 	}
 }
 
@@ -326,12 +291,16 @@ func TestSubscribe(t *testing.T) {
 	writer2 := httptest.NewRecorder()
 	srv := newTestServer(t, db)
 
-	result := store.Email{}
 	ctx := context.Background()
+	removedTestEmail := false
+	t.Cleanup(func() {
+		if !removedTestEmail {
+			require.NoError(t, db.DeleteEmailByAddress(ctx, "test@gmail.com"), "database")
+		}
+	})
 
-	if err := db.Emails.FindOne(ctx, bson.M{}).Decode(&result); err != nil {
-		t.Errorf("Database error is %v", err)
-	}
+	result, err := db.FirstEmail(ctx)
+	require.NoError(t, err, "database")
 
 	form := url.Values{}
 	form.Add("email", "test@gmail.com")
@@ -343,16 +312,13 @@ func TestSubscribe(t *testing.T) {
 
 	srv.subscribe(writer, req)
 
-	if writer.Code != 200 {
-		t.Errorf("Response code is %v", writer.Code)
-	}
+	require.Equal(t, http.StatusOK, writer.Code)
 	resp := writer.Result()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
 
-	defer resp.Body.Close()
-	if string(body) != success {
-		t.Errorf("Expected a success message: %v, but got %v", success, string(body))
-	}
+	require.NoError(t, resp.Body.Close())
+	require.Equal(t, success, string(body))
 
 	form2 := url.Values{}
 	form2.Add("email", result.EmailAddress)
@@ -365,21 +331,16 @@ func TestSubscribe(t *testing.T) {
 	srv.subscribe(writer2, req2)
 
 	resp2 := writer2.Result()
-	body2, _ := ioutil.ReadAll(resp2.Body)
+	body2, err := io.ReadAll(resp2.Body)
+	require.NoError(t, err)
 
-	defer resp2.Body.Close()
+	require.NoError(t, resp2.Body.Close())
 
-	if writer2.Code != 200 {
-		t.Errorf("Response code is %v", writer2.Code)
-	}
-	if string(body2) != fail {
-		t.Errorf("Expected a fail message: %v, but got %v", fail, string(body2))
-	}
+	require.Equal(t, http.StatusOK, writer2.Code)
+	require.Equal(t, fail, string(body2))
 
-	if _, err := db.Emails.DeleteOne(ctx, bson.M{"email": "test@gmail.com"}); err != nil {
-		t.Errorf("Database error is %v", err)
-	}
-
+	require.NoError(t, db.DeleteEmailByAddress(ctx, "test@gmail.com"), "database")
+	removedTestEmail = true
 }
 
 func TestPostDate(t *testing.T) {
@@ -402,9 +363,7 @@ func TestPostDate(t *testing.T) {
 
 	for name, tt := range testCases {
 		t.Run(name, func(t *testing.T) {
-			if got := postDate(tt.createdAt, tt.fallback); got != tt.want {
-				t.Fatalf("postDate() = %q, want %q", got, tt.want)
-			}
+			require.Equal(t, tt.want, postDate(tt.createdAt, tt.fallback))
 		})
 	}
 }
