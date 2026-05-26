@@ -22,7 +22,7 @@
       <img class = "post-photo" src="{{$e}}" alt="">
       {{end}}
       <div class = "content">
-      {{index $.Content $i}}
+      {{index $.Content $i | safeHTML}}
       </div>
       {{end}}
       <div class = "post-end">

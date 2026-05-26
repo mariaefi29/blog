@@ -3,39 +3,40 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
-	"time"
 
 	"github.com/mariaefi29/blog/config"
 	"github.com/mariaefi29/blog/internal/server"
+	"github.com/mariaefi29/blog/store"
 )
 
-type httpConfig struct {
-	Port    int
-	Timeout time.Duration
-}
-
 func main() {
-	defer config.Disconnect()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
 
-	cfg, err := loadHTTPConfig()
+	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	db, err := store.New(ctx, cfg.Mongo.ConnectionString, cfg.Mongo.Database)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := db.Disconnect(context.Background()); err != nil {
+			log.Println(err)
+		}
+	}()
+
 	srv := server.New(server.Params{
-		Port:      cfg.Port,
-		Timeout:   cfg.Timeout,
-		StaticDir: "public",
+		Config: cfg,
+		Store:  db,
 	})
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
-	defer stop()
 	stoppedCh := make(chan struct{})
 
 	go func() {
@@ -45,7 +46,7 @@ func main() {
 		}
 	}()
 
-	log.Printf("http server address: http://localhost:%d", cfg.Port)
+	log.Printf("http server address: http://localhost:%d", cfg.HTTP.Port)
 
 	<-ctx.Done()
 
@@ -56,24 +57,4 @@ func main() {
 	<-stoppedCh
 
 	log.Print("http server stopped")
-}
-
-func loadHTTPConfig() (httpConfig, error) {
-	cfg := httpConfig{
-		Port:    8080,
-		Timeout: 30 * time.Second,
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		return cfg, nil
-	}
-
-	parsedPort, err := strconv.Atoi(port)
-	if err != nil {
-		return httpConfig{}, fmt.Errorf("invalid PORT value %q: %w", port, err)
-	}
-	cfg.Port = parsedPort
-
-	return cfg, nil
 }
