@@ -64,6 +64,8 @@ func (s *server) routes(staticDir string) http.Handler {
 	router.Get("/category/{category}", s.category)
 	router.Get("/contact", s.contact)
 	router.Post("/contact", s.sendMessage)
+	router.Get("/impressum", s.impressum)
+	router.Get("/datenschutzerklaerung", s.datenschutzerklaerung)
 
 	if staticDir == "" {
 		staticDir = "public"
@@ -126,6 +128,20 @@ func (s *server) contact(w http.ResponseWriter, _ *http.Request) {
 	if err := s.renderTemplate(w, "contact.gohtml", nil); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Println(fmt.Errorf("execute template contact: %w", err))
+	}
+}
+
+func (s *server) impressum(w http.ResponseWriter, _ *http.Request) {
+	if err := s.renderTemplate(w, "impressum.gohtml", nil); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println(fmt.Errorf("execute template impressum: %w", err))
+	}
+}
+
+func (s *server) datenschutzerklaerung(w http.ResponseWriter, _ *http.Request) {
+	if err := s.renderTemplate(w, "datenschutzerklaerung.gohtml", nil); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Println(fmt.Errorf("execute template datenschutzerklaerung: %w", err))
 	}
 }
 

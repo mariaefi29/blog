@@ -16,7 +16,7 @@ body {
   grid-column: 5 / 6;
 }
 
-.logo, .about-main, .abt-post-header, .profile-pages {
+.logo, .about-main, .abt-post-header, .profile-pages, .legal-main {
   grid-column: 2/4;
 }
 
