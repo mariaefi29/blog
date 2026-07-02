@@ -3,7 +3,7 @@ module github.com/mariaefi29/blog
 go 1.26.1
 
 require (
-	github.com/go-chi/chi/v5 v5.2.2
+	github.com/go-chi/chi/v5 v5.2.4
 	github.com/gorilla/schema v1.4.1
 	github.com/haisum/recaptcha v0.0.0-20170327142240-7d3b8053900e
 	github.com/stretchr/testify v1.11.1
