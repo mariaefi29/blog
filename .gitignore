@@ -13,8 +13,12 @@ app.yaml
 # my images
 
 /public/img
+/public/favicons
 
 # dockerfiles for now
 
 Dockerfile
 .dockerignore
+scripts
+
+blog
