@@ -68,7 +68,7 @@
             <h2>{{.Author}}</h2>
             <a href="{{.Website}}" class = "website">{{.Website}}</a>
           </div>
-          <p>{{.Content}}</p>
+          <p>{{.Content | safeHTML}}</p>
           <div class = "date comment-date">{{.CreatedAt}}</div>
         </li>
 
