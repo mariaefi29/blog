@@ -5,12 +5,12 @@ body {
   grid-row-gap: 1rem;
 }
 
-.contact-body {
+.contact-body, .legal-body {
   min-height: 100vh;
   grid-template-rows: auto auto auto 1fr auto;
 }
 
-.contact-body .about-main {
+.contact-body .about-main, .legal-body .legal-main {
   align-self: start;
 }
 
@@ -19,7 +19,7 @@ nav, .logo, footer, .abt-post-header, .profile-pages{
 }
 
 
- .posts, aside, .sing-up-form, .posts-main, .no-posts, .about-main{
+ .posts, aside, .sing-up-form, .posts-main, .no-posts, .about-main, .legal-main{
   grid-column: 2 / 2;
 }
 

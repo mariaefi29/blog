@@ -298,14 +298,58 @@ footer {
   padding: 1rem;
   margin-top: 2rem;
   display: flex;
+  flex-flow: column nowrap;
+  gap: 1.4rem;
   justify-content: center;
   align-items: center;
   border-top: 1.2px solid #d03b39;
   background-color: #fbf9f4;
+  text-align: center;
 }
 
-footer > a {
-  margin: 0 0.2rem;
+.footer-links {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: 1.8rem;
+  align-items: center;
+  width: min(100%, 30rem);
+}
+
+.footer-links a:first-child {
+  justify-self: start;
+  margin-left: 5.2rem;
+}
+
+.footer-links a:last-child {
+  justify-self: start;
+}
+
+.footer-favicon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.legal-main {
+  width: 100%;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.legal-section {
+  margin-bottom: 1.6rem;
+}
+
+.legal-section h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.legal-section p {
+  line-height: 145%;
+}
+
+.legal-section a {
+  color: #d03b39;
 }
 
 .cookie-consent-backdrop {

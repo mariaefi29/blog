@@ -193,6 +193,46 @@ func TestContact(t *testing.T) {
 	require.Equal(t, http.StatusOK, writer.Code)
 }
 
+func TestLegalPages(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		path string
+		want string
+	}{
+		"impressum": {
+			path: "/impressum",
+			want: "Maria Efimenko",
+		},
+		"datenschutzerklaerung": {
+			path: "/datenschutzerklaerung",
+			want: "Datenschutzerklärung",
+		},
+	}
+
+	srv := New(Params{
+		Config: config.Config{
+			HTTP: config.HTTPConfig{
+				Port:      8080,
+				Timeout:   5 * time.Second,
+				StaticDir: "../../public",
+			},
+		},
+	})
+
+	for name, tt := range testCases {
+		t.Run(name, func(t *testing.T) {
+			writer := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
+
+			srv.Handler.ServeHTTP(writer, req)
+
+			require.Equal(t, http.StatusOK, writer.Code)
+			require.Contains(t, writer.Body.String(), tt.want)
+		})
+	}
+}
+
 // TestCategory: check get request to (/category/:category) URL
 func TestCategory(t *testing.T) {
 	t.Parallel()
