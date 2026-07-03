@@ -308,20 +308,11 @@ footer {
 }
 
 .footer-links {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  column-gap: 1.8rem;
+  display: inline-flex;
+  flex-flow: column nowrap;
+  gap: 0.8rem;
   align-items: center;
-  width: min(100%, 30rem);
-}
-
-.footer-links a:first-child {
-  justify-self: start;
-  margin-left: 5.2rem;
-}
-
-.footer-links a:last-child {
-  justify-self: start;
+  width: auto;
 }
 
 .footer-favicon {
