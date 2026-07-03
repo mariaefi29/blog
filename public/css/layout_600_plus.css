@@ -39,3 +39,13 @@ aside {
   width: 70%;
   justify-self: center;
 }
+
+.footer-links {
+  column-gap: 1.8rem;
+  width: min(100%, 30rem);
+}
+
+.footer-links a:first-child {
+  justify-self: start;
+  margin-left: 5.2rem;
+}
